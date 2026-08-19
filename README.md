@@ -228,7 +228,23 @@ python -m flaskblog.run                                                         
 
 ## Documentation
 
-- [`docs/setup-and-run.md`](docs/setup-and-run.md) — the authoritative, verified setup and
-  troubleshooting report (Russian), with full environment-variable tables.
-- [`AGENTS.md`](AGENTS.md) / [`AGENTS.ru.md`](AGENTS.ru.md) — conventions and gotchas for AI
-  coding agents.
+Everything under `docs/` is written in **Russian**. The numbered series 01–07 is meant to be
+read in order; `setup-and-run.md` is the operational companion.
+
+| Document | Contents |
+|---|---|
+| [`docs/01_project_structure.md`](docs/01_project_structure.md) | project map, file tree, external dependencies and their role, environment invariants, metrics |
+| [`docs/02_architecture.md`](docs/02_architecture.md) | high-level architecture, design patterns in use, data flow, state / caching / configuration, deployment |
+| [`docs/03_execution_flow.md`](docs/03_execution_flow.md) | application lifecycle, routes and request handling, key processes step by step, error handling, logging |
+| [`docs/04_code_quality.md`](docs/04_code_quality.md) | quality assessment, readability and cohesion, testability as the main debt, defects by severity |
+| [`docs/05_optimization_roadmap.md`](docs/05_optimization_roadmap.md) | proposed work order, architectural improvements, performance, refactoring queue, DX, priority table |
+| [`docs/06_graph_index.md`](docs/06_graph_index.md) | the codebase graph index (coverage caveats, ready-made queries) and architecture as measured: coupling, cohesion, hotspots, complexity |
+| [`docs/07_permissions.md`](docs/07_permissions.md) | Claude Code permissions: auto mode and its safety classifier, why it fails here, allow rules, diagnostics |
+| [`docs/setup-and-run.md`](docs/setup-and-run.md) | the authoritative, verified setup and troubleshooting report, with full environment-variable tables |
+| [`AGENTS.md`](AGENTS.md) / [`AGENTS.ru.md`](AGENTS.ru.md) | conventions and gotchas for AI coding agents |
+
+> ⚠️ 01–05 and `setup-and-run.md` were written against an earlier commit. Where the working
+> tree has since diverged — the DSN assembly in `config.py`, and env files actually being
+> tracked by git — the verified deltas are recorded in
+> [`docs/06_graph_index.md`](docs/06_graph_index.md) §4. Read that section before trusting the
+> environment-variable tables here or in `setup-and-run.md`.

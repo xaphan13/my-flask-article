@@ -160,47 +160,6 @@ wheels = [
 ]
 
 [[package]]
-name = "flask-blog-1"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "email-validator" },
-    { name = "flask" },
-    { name = "flask-bcrypt" },
-    { name = "flask-login" },
-    { name = "flask-sqlalchemy" },
-    { name = "flask-wtf" },
-    { name = "gunicorn" },
-    { name = "multipledispatch" },
-    { name = "pastescript" },
-    { name = "pillow" },
-    { name = "psycopg2-binary" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "waitress" },
-    { name = "wtforms" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "email-validator", specifier = ">=2.3.0" },
-    { name = "flask", specifier = "==3.1.2" },
-    { name = "flask-bcrypt", specifier = "==1.0.1" },
-    { name = "flask-login", specifier = "==0.6.3" },
-    { name = "flask-sqlalchemy", specifier = "==3.1.1" },
-    { name = "flask-wtf", specifier = "==1.2.2" },
-    { name = "gunicorn", specifier = "==23.0.0" },
-    { name = "multipledispatch", specifier = "==1.0.0" },
-    { name = "pastescript", specifier = "==3.7.0" },
-    { name = "pillow", specifier = "==12.0.0" },
-    { name = "psycopg2-binary" },
-    { name = "pydantic", specifier = "==2.12.5" },
-    { name = "python-dotenv", specifier = "==1.2.1" },
-    { name = "waitress", specifier = "==3.0.2" },
-    { name = "wtforms", specifier = "==3.2.1" },
-]
-
-[[package]]
 name = "flask-login"
 version = "0.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -407,6 +366,47 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fe/3e/a62c3b824c7dec33c4a1578bcc842e6c30300051033a4e5975ed86cc2536/multipledispatch-1.0.0.tar.gz", hash = "sha256:5c839915465c68206c3e9c473357908216c28383b425361e5d144594bf85a7e0", size = 12385, upload-time = "2023-06-27T16:45:11.074Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/c0/00c9809d8b9346eb238a6bbd5f83e846a4ce4503da94a4c08cb7284c325b/multipledispatch-1.0.0-py3-none-any.whl", hash = "sha256:0c53cd8b077546da4e48869f49b13164bebafd0c2a5afceb6bb6a316e7fb46e4", size = 12818, upload-time = "2023-06-27T16:45:09.418Z" },
+]
+
+[[package]]
+name = "my-flask-article"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "email-validator" },
+    { name = "flask" },
+    { name = "flask-bcrypt" },
+    { name = "flask-login" },
+    { name = "flask-sqlalchemy" },
+    { name = "flask-wtf" },
+    { name = "gunicorn" },
+    { name = "multipledispatch" },
+    { name = "pastescript" },
+    { name = "pillow" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "waitress" },
+    { name = "wtforms" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "email-validator", specifier = ">=2.3.0" },
+    { name = "flask", specifier = "==3.1.2" },
+    { name = "flask-bcrypt", specifier = "==1.0.1" },
+    { name = "flask-login", specifier = "==0.6.3" },
+    { name = "flask-sqlalchemy", specifier = "==3.1.1" },
+    { name = "flask-wtf", specifier = "==1.2.2" },
+    { name = "gunicorn", specifier = "==23.0.0" },
+    { name = "multipledispatch", specifier = "==1.0.0" },
+    { name = "pastescript", specifier = "==3.7.0" },
+    { name = "pillow", specifier = "==12.0.0" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic", specifier = "==2.12.5" },
+    { name = "python-dotenv", specifier = "==1.2.1" },
+    { name = "waitress", specifier = "==3.0.2" },
+    { name = "wtforms", specifier = "==3.2.1" },
 ]
 
 [[package]]
