@@ -1,10 +1,15 @@
-  
-  <nav class="navbar navbar-expand-md navbar-dark backcolor-header fixed-top">
-    <div class="container">
 
-      <a class="navbar-brand mr-4" href="{{ url_for('art_main.art_home') }}">Сайт о программировании</a>
-      
+  <nav class="navbar navbar-expand-md navbar-dark backcolor-header fixed-top">
+
+      {% if lang %}
+        <a class="navbar-brand mr-4" href="{{ url_for('art_main.art_home') }}">Сайт о программировании на {{ lang }}</a>
+      {% else %}
+        <a class="navbar-brand mr-4" href="{{ url_for('art_main.art_home') }}">Сайт о программировании</a>
+      {% endif %}
+
+
       <div class="collapse navbar-collapse" id="navbarToggle">
+        <!-- Navbar Left Side -->
         <div class="navbar-nav mr-auto">
         </div>
 
@@ -26,5 +31,4 @@
         </div>
       </div>
 
-    </div>
   </nav>
