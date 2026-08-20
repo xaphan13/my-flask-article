@@ -3,7 +3,7 @@ from flask import render_template, Blueprint
 from flaskblog.logger.config_log import ConfigLogger
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
-from flaskblog.new_articles.schema_art import art_dict_file, ArticleLang, read_html
+from flaskblog.new_articles.schema_art import art_dict_file, ArticleLang, render_article
 
 art_main = Blueprint('art_main', __name__)
 
@@ -22,7 +22,7 @@ def art_author(author, art_id):
     logFC.info(f"art_author : '/art/<string:username>' = {author} - {art_id}")
 
     art: ArticleLang = art_dict_file[art_id]
-    content: str = read_html(art.file_name)
+    content: str = render_article(art.file_name)
     art.content = content
 
     return render_template('new_art/art_author.html', lang=art.lang, art=art)

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
+from markdown import markdown
 import os
 
 from flaskblog.logger.config_log import ConfigLogger
@@ -39,6 +40,16 @@ def read_html(name_html: str, name_dir: str = get_path_dir()) -> str:
     return all_file
 
 
+def render_article(name_file: str, name_dir: str = get_path_dir()) -> str:
+    content = read_html(name_file, name_dir)
+    file_extension = os.path.splitext(name_file)[1].lower()
+
+    if file_extension in {".md", ".markdown"}:
+        return markdown(content, extensions=["fenced_code", "tables"])
+
+    return content
+
+
 # ------------------------------ NEW version
 art_files: List[ArticleLang] = [
     ArticleLang(author="Max",  lang="Python", art_id=1,
@@ -48,7 +59,9 @@ art_files: List[ArticleLang] = [
     ArticleLang(author="Max",  lang="Python", art_id=3,
                 title="Логирование в многопроцессном приложении", file_name="art3.html"),
     ArticleLang(author="Max",  lang="Python", art_id=4,
-                title="Глубокое погружение в метаклассы", file_name="art4.html")
+                title="Глубокое погружение в метаклассы", file_name="art4.html"),
+    ArticleLang(author="Max",  lang="Python", art_id=5,
+                title="Репозиторий для Telegram-магазина", file_name="gemini-pro-fastapi-1.md")
 ]
 
 art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
