@@ -1,0 +1,30 @@
+articles:
+  - author: Max
+    lang: Python
+    art_id: 1
+    title: Генераторы и декораторы
+    file_name: art1.html
+
+  - author: Alex
+    lang: Rust
+    art_id: 2
+    title: Кортежи и массивы
+    file_name: art2.html
+
+  - author: Max
+    lang: Python
+    art_id: 3
+    title: Логирование в многопроцессном приложении
+    file_name: art3.html
+
+  - author: Max
+    lang: Python
+    art_id: 4
+    title: Глубокое погружение в метаклассы
+    file_name: art4.html
+
+  - author: Max
+    lang: Python
+    art_id: 5
+    title: Репозиторий для Telegram-магазина-
+    file_name: gemini-pro-fastapi-1.md

@@ -182,16 +182,25 @@ Post(id, title, date_posted, content, user_id)
 
 Статьи — это Pydantic-модели `ArticleLang` с полями
 `author`, `lang`, `art_id`, `title`, `file_name`, `content`.
+Метаданные статей хранятся в `flaskblog/new_articles/articles.yaml`, а тела статей — в
+`flaskblog/templates/content_art/`. Поддерживаются файлы `.html`, `.md` и `.markdown`.
 
 **Чтобы добавить статью:**
 
-1. Создайте `flaskblog/templates/content_art/<file>.html` с телом статьи.
-2. Добавьте запись `ArticleLang(...)` в `art_files` в
-   `flaskblog/new_articles/schema_art.py`.
+1. Создайте `flaskblog/templates/content_art/<file>.html` или `<file>.md` с телом статьи.
+2. Добавьте запись с метаданными в `flaskblog/new_articles/articles.yaml`:
 
-Словарь `art_dict_file` индексируется по `art_id` — именно его ищет маршрут
-`/art/<author>/<art_id>`; тело статьи читается с диска во время запроса функцией
-`read_html()`.
+```yaml
+  - author: Max
+    lang: Python
+    art_id: 6
+    title: Название статьи
+    file_name: my_article.md
+```
+
+Словарь `art_dict_file` загружается из YAML и индексируется по `art_id` — именно его ищет
+маршрут `/art/<author>/<art_id>`. HTML-файлы выводятся как готовая разметка, Markdown
+рендерится на сервере в HTML.
 
 ## Линтеры и форматирование
 

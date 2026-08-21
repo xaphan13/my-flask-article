@@ -2,7 +2,9 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
 from markdown import markdown
+from pathlib import Path
 import os
+import yaml
 
 from flaskblog.logger.config_log import ConfigLogger
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
@@ -51,19 +53,11 @@ def render_article(name_file: str, name_dir: str = get_path_dir()) -> str:
 
 
 # ------------------------------ NEW version
-art_files: List[ArticleLang] = [
-    ArticleLang(author="Max",  lang="Python", art_id=1,
-                title="Генераторы и декораторы", file_name="art1.html"),
-    ArticleLang(author="Alex", lang="Rust",   art_id=2,
-                title="Кортежи и массивы", file_name="art2.html"),
-    ArticleLang(author="Max",  lang="Python", art_id=3,
-                title="Логирование в многопроцессном приложении", file_name="art3.html"),
-    ArticleLang(author="Max",  lang="Python", art_id=4,
-                title="Глубокое погружение в метаклассы", file_name="art4.html"),
-    ArticleLang(author="Max",  lang="Python", art_id=5,
-                title="Репозиторий для Telegram-магазина", file_name="gemini-pro-fastapi-1.md")
-]
+articles_path = Path(__file__).with_name("articles.yaml")
+with articles_path.open("r", encoding="utf8") as articles_file:
+    articles_data = yaml.safe_load(articles_file)
 
+art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
 art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
 
 

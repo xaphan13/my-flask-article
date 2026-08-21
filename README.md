@@ -180,15 +180,26 @@ Post(id, title, date_posted, content, user_id)
 
 Articles are Pydantic `ArticleLang` models with the fields
 `author`, `lang`, `art_id`, `title`, `file_name`, `content`.
+Article metadata is stored in `flaskblog/new_articles/articles.yaml`, while article bodies
+are stored in `flaskblog/templates/content_art/`. The supported body formats are `.html`,
+`.md`, and `.markdown`.
 
 **To add an article:**
 
-1. Create `flaskblog/templates/content_art/<file>.html` with the article body.
-2. Append an `ArticleLang(...)` entry to `art_files` in
-   `flaskblog/new_articles/schema_art.py`.
+1. Create `flaskblog/templates/content_art/<file>.html` or `<file>.md` with the article body.
+2. Add its metadata to `flaskblog/new_articles/articles.yaml`:
 
-`art_dict_file` is keyed by `art_id`, which is what `/art/<author>/<art_id>` looks up; the
-body is read from disk at request time by `read_html()`.
+```yaml
+  - author: Max
+    lang: Python
+    art_id: 6
+    title: Article title
+    file_name: my_article.md
+```
+
+`art_dict_file` is loaded from YAML and keyed by `art_id`, which is what
+`/art/<author>/<art_id>` looks up. HTML files are rendered as-is; Markdown is rendered to
+HTML on the server.
 
 ## Lint and format
 

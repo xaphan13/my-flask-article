@@ -197,14 +197,9 @@ from flaskblog import db
 - Модели SQLAlchemy используют классический декларативный стиль `db.Column`, а не
   `Mapped[]`/`mapped_column` из 2.0. `User.__init__` переопределён с ключевыми
   аргументами по умолчанию.
-- Добавить статью = добавить запись `ArticleLang(...)` в `art_files` в
-  `new_articles/schema_art.py` **и** создать соответствующий файл
-  `templates/content_art/<file>.html`. Словарь `art_dict_file` индексируется по `art_id` —
-  именно его ищет маршрут `/art/<author>/<art_id>`.
-- В `schema_art.py` также есть пара `articles` / `articles_dict`, помеченная как
-  «old version» (контент инлайном из `arts_content.py`), рядом с «NEW version»
-  `art_files` / `art_dict_file` (из файлов). Маршруты используют **новые**, файловые
-  словари; старые не трогайте без отдельной просьбы.
+- Поля `ArticleLang`: `author`, `lang`, `art_id: int`, `title`, `file_name`, `content`.
+- Метаданные статей хранятся в `new_articles/articles.yaml`; добавление статьи = новая запись в YAML и соответствующий файл `.html`, `.md` или `.markdown` в `templates/content_art/`. `art_dict_file` загружается из YAML и индексирован по `art_id` — именно его ищет маршрут `/art/<author>/<art_id>`.
+- В `schema_art.py` также есть старая пара `articles` / `articles_dict` с inline-контентом из `arts_content.py`. Маршруты используют новый файловый словарь; старую пару не трогать без отдельной просьбы.
 
 ### Грабли — сверьтесь с этим списком перед отладкой
 

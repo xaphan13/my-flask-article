@@ -191,14 +191,14 @@ Article bodies live in `templates/content_art/artN.html` and are read at request
 
 - SQLAlchemy models use the classic `db.Column` declarative style (not 2.0
   `Mapped[]`/`mapped_column`). `User.__init__` is overridden with keyword defaults.
-- Adding an article = append an `ArticleLang(...)` entry to `art_files` in
-  `new_articles/schema_art.py` **and** add the matching `templates/content_art/<file>.html`.
-  `art_dict_file` is keyed by `art_id`, which is what the `/art/<author>/<art_id>` route
-  looks up.
-- `schema_art.py` also contains an `articles` / `articles_dict` pair marked
-  "old version" (inline `content` from `arts_content.py`) alongside the "NEW version"
-  `art_files` / `art_dict_file` (file-backed). Routes use the **new** file-backed dicts;
-  leave the old ones alone unless asked to clean up.
+- `ArticleLang` fields: `author`, `lang`, `art_id: int`, `title`, `file_name`, `content`.
+- Article metadata is stored in `new_articles/articles.yaml`; adding an article means adding
+  a YAML record and the matching `.html`, `.md`, or `.markdown` file in
+  `templates/content_art/`. `art_dict_file` is loaded from YAML and keyed by `art_id`,
+  which is what `/art/<author>/<art_id>` looks up.
+- `schema_art.py` also contains the old `articles` / `articles_dict` pair with inline
+  content from `arts_content.py`. Routes use the new file-backed dictionary; leave the old
+  pair alone unless asked.
 
 ### Gotchas — verify against these before debugging
 
