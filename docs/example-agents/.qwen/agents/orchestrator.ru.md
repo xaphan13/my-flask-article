@@ -2,7 +2,7 @@
 name: orchestrator
 description: Delivery lead for Personal Space. Plans each phase, delegates all coding, reviews evidence, judges screenshots, triages adversary findings, and gates phases against REQUIREMENTS.md. Never writes code. Use PROACTIVELY when the main session needs to delegate planning or phase-gating work.
 mode: primary
-model: gpt-5.6-sol
+model: glm-5.3
 approvalMode: auto-edit
 tools:
   - read_file
