@@ -1,29 +1,31 @@
 # Отчёт: агентный режим для flask-blog-1
 
-Дата: 2026-08-27 (обновление). Комплект находится в `new-agents/` и ждёт проверки перед
-переносом в корень проекта. Исходный шаблон — `docs/example-agents/` — не изменялся.
+Дата: 2026-08-27 (обновление). Комплект перенесён из `new-agents/` в корень проекта и
+работает как постоянный агентный режим. `.ru`-дубли (`README.ru.md`, `QWEN.ru.md`,
+`AGENTS.ru.md`) удалены — все файлы одинарные, на русском. Исходный шаблон —
+`example-agents` — не изменялся.
 
 ## 1. Концепция
 
 Агентный режим внедряется **в текущий Flask-проект** и живёт в нём постоянно:
 
-- `README.md` / `QWEN.md` / `AGENTS.md` — контекст проекта + правила команды.
-- `REQUIREMENTS.md` — **всегда одно текущее задание** по проекту. Команда выполняет его;
+- `../README.md` / `../QWEN.md` / `../AGENTS.md` — контекст проекта + правила команды.
+- `../REQUIREMENTS.md` — **всегда одно текущее задание** по проекту. Команда выполняет его;
   когда все критерии успеха подтверждены — пользователь заменяет файл на новое задание,
   и цикл повторяется тем же составом команды.
-- Переносимость: для другого проекта копируются `QWEN.md`, `AGENTS.md`, `README.md`
-  и `.qwen/`, адаптируется проектный контекст; `REQUIREMENTS.md` получает задание
+- Переносимость: для другого проекта копируются `../QWEN.md`, `../AGENTS.md`, `../README.md`
+  и `../.qwen`, адаптируется проектный контекст; `../REQUIREMENTS.md` получает задание
   нового проекта.
 
 ## 2. Состав команды
 
 | Роль | Где живёт | Модель | Участок |
 |---|---|---|---|
-| Оркестратор | `QWEN.md` (главная сессия) | glm-5.3 | план, делегирование, ревью, триаж, финальное решение |
-| frontend-dev | `.qwen/agents/frontend-dev.md` | nordrouter/minimax/minimax-m3 | `flaskblog/templates/`, `flaskblog/static/` |
-| backend-dev | `.qwen/agents/backend-dev.md` | nordrouter/moonshotai/kimi-k2.7-code | Python-модули `flaskblog/`, `articles.yaml` |
-| qa | `.qwen/agents/qa.md` | nordrouter/minimax/minimax-m3 | проверки запуском/curl, `e2e/`, DEFECTS.md |
-| adversary | `.qwen/agents/adversary.md` | nordrouter/minimax/minimax-m3 | враждебные прогоны, ADVERSARIAL_REVIEW.md |
+| Оркестратор | `../QWEN.md` (главная сессия) | glm-5.3 | план, делегирование, ревью, триаж, финальное решение |
+| frontend-dev | `../.qwen/agents/frontend-dev.md` | nordrouter/minimax/minimax-m3 | `../flaskblog/templates`, `../flaskblog/static` |
+| backend-dev | `../.qwen/agents/backend-dev.md` | nordrouter/moonshotai/kimi-k2.7-code | Python-модули `../flaskblog`, `articles.yaml` |
+| qa | `../.qwen/agents/qa.md` | nordrouter/minimax/minimax-m3 | проверки запуском/curl, `e2e/`, DEFECTS.md |
+| adversary | `../.qwen/agents/adversary.md` | nordrouter/minimax/minimax-m3 | враждебные прогоны, ADVERSARIAL_REVIEW.md |
 
 Особенность проекта: «фронтенд» здесь — Jinja-шаблоны и статика, SPA нет. Граница
 frontend/backend проведена по `templates/static` vs Python-модули и зафиксирована
@@ -39,17 +41,17 @@ frontend/backend проведена по `templates/static` vs Python-модул
 1. **Привязка к flask-blog-1.** Раньше комплект описывал абстрактную «Гостевую книгу»;
    теперь QWEN.md/AGENTS.md/README.md построены на корневых `QWEN.ru.md`, `AGENTS.ru.md`,
    `README.ru.md` текущего проекта: обзор, стек, архитектура, запуск, соглашения, грабли.
-2. **Имена файлов без языкового суффикса:** `README.md`, `QWEN.md`, `AGENTS.md`,
-   `REQUIREMENTS.md`, агенты `frontend-dev.md` и т.д. Qwen Code ищет `QWEN.md`/`AGENTS.md`
+2. **Имена файлов без языкового суффикса:** `../README.md`, `../QWEN.md`, `../AGENTS.md`,
+   `../REQUIREMENTS.md`, агенты `frontend-dev.md` и т.д. Qwen Code ищет `../QWEN.md`/`../AGENTS.md`
    без суффиксов.
 3. **REQUIREMENTS.md — простое задание по текущему проекту:** несуществующая статья
    (`/art/<author>/999`) должна давать 404 вместо 500 с `KeyError` (известная «грабля»
    из AGENTS.ru.md). 7 критериев успеха с конкретными командами проверки.
-4. **Агенты универсальны, привязка — в AGENTS.md.** В `.qwen/agents/` осталась только
+4. **Агенты универсальны, привязка — в AGENTS.md.** В `../.qwen/agents` осталась только
    роль: обязанности, протокол дефектов, универсальные границы файлов и жёсткие правила.
    Первый шаг каждого агента — прочитать AGENTS.md. Привязка к проекту — таблица
    «Зоны и проверки» в AGENTS.md (зоны файлов, команды проверки, особые запреты).
-   При переносе в другой проект `.qwen/agents/` копируется без правок, меняется
+   При переносе в другой проект `../.qwen/agents` копируется без правок, меняется
    только таблица.
 5. **Жизненный цикл заданий** описан в QWEN.md и AGENTS.md: одно задание → подтверждение
    критериев → замена REQUIREMENTS.md → следующее задание.
@@ -60,8 +62,8 @@ frontend/backend проведена по `templates/static` vs Python-модул
 
 ## 4. Схема цикла задания
 
-1. Пользователь кладёт задание в `REQUIREMENTS.md`, запускает Qwen Code в корне
-   проекта; главная сессия (glm-5.3) по `QWEN.md` = оркестратор.
+1. Пользователь кладёт задание в `../REQUIREMENTS.md`, запускает Qwen Code в корне
+   проекта; главная сессия (glm-5.3) по `../QWEN.md` = оркестратор.
 2. Оркестратор пишет план: кто что меняет, как проверяем.
 3. Разработчики (frontend-dev / backend-dev по участку) выполняют спецификации.
 4. Оркестратор ревьюит диффы и проверки (ruff, url_map, curl).
@@ -69,34 +71,32 @@ frontend/backend проведена по `templates/static` vs Python-модул
 6. adversary атакует изменённую функциональность; находки — в ADVERSARIAL_REVIEW.md.
 7. Оркестратор триажирует; дефекты уходят разработчикам; qa закрывает после ретеста.
 8. Все критерии подтверждены → задание закрыто → пользователь кладёт следующее
-   в `REQUIREMENTS.md`.
+   в `../REQUIREMENTS.md`.
 
-## 5. Риски и что проверить перед переносом в корень
+## 5. Как выполнен перенос в корень
 
+- `../README.md`, `../QWEN.md`, `../AGENTS.md` в корне заменены версиями агентного режима
+  (русский язык); `.ru`-дубли удалены.
+- `../REQUIREMENTS.md` и `REPORT.md` легли в корень как новые файлы.
+- `../.qwen/agents` — четыре универсальных агента; `../.qwen/settings.json` корня дополнен
+  ключом `tools.approvalMode: auto-edit` с сохранением существовавших `permissions.allow`.
+- `DEFECTS.md`, `ADVERSARIAL_REVIEW.md`, `e2e/`, `screenshots/` появятся в корне по ходу
+  работы команды — их создаёт qa и adversary.
 - Модели субагентов объявлены в `~/.qwen/settings.json` (authType `openai`) — на момент
   отчёта обе на месте.
-- При переносе в корень `README.md`, `QWEN.md`, `AGENTS.md` заменят существующие
-  корневые `README.md`, `QWEN.md`, `AGENTS.md` — **заранее решить**, что делать с их
-  текущим содержимым (в корне есть и `.ru`-версии; возможно, обновлять парно).
-- `REQUIREMENTS.md`, `DEFECTS.md`, `ADVERSARIAL_REVIEW.md`, `e2e/`, `screenshots/`
-  лягут в корень как новые файлы.
-- `.qwen/agents/` в корне проекта: учесть, что там уже может быть своя папка `.qwen`
-  (MCP codebase-memory и др. настройки пользовательские — не пострадают, но проверить
-  слияние `settings.json`: ключ `tools.approvalMode` не должен конфликтовать с желаемым
-  режимом одобрения).
 - Проверок кода не выполнялось — комплект документационный, запуск не требовался.
 
-## 6. Состав комплекта `new-agents/`
+## 6. Состав комплекта (в корне проекта)
 
 ```
-new-agents/
+flask-blog-1/
 ├── README.md             — README проекта + раздел агентного режима
 ├── AGENTS.md             — контекст проекта + правила команды, дефекты, форматы
 ├── QWEN.md               — контекст проекта + оркестратор (главная сессия)
 ├── REQUIREMENTS.md       — текущее задание: 404 для несуществующих статей
 ├── REPORT.md             — этот отчёт
 └── .qwen/
-    ├── settings.json     — tools.approvalMode: auto-edit
+    ├── settings.json     — tools.approvalMode: auto-edit + permissions проекта
     └── agents/
         ├── frontend-dev.md
         ├── backend-dev.md

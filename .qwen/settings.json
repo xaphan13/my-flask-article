@@ -1,4 +1,7 @@
 {
+  "tools": {
+    "approvalMode": "auto-edit"
+  },
   "permissions": {
     "allow": [
       "Bash(.venv/bin/python *)",

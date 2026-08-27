@@ -1,232 +1,216 @@
-# QWEN.md — flask-blog-1
+# QWEN.md — flask-blog-1 (агентный режим)
 
-Instructional context for AI agents working in this repository.
+Контекст-инструкция для главной сессии Qwen Code. Два назначения сразу: контекст проекта
+(читай, как обычный QWEN.md) и роль оркестратора команды агентов (раздел «Агентный режим»
+в конце файла). Правила для всей команды — в [AGENTS.md](AGENTS.md); текущее задание
+команды — в [REQUIREMENTS.md](REQUIREMENTS.md).
 
-## Project Overview
+## Обзор проекта
 
-A server-rendered blog / article site built on **Flask 3.1** using the application-factory
-pattern. It combines two content models:
+Блог/сайт статей с серверным рендерингом на **Flask 3.1**, построенный по паттерну
+«фабрика приложения» (application factory). Совмещает две модели контента:
 
-1. **Database-backed users & posts** — `User` / `Post` via Flask-SQLAlchemy on PostgreSQL,
-   with registration, login, and profile-picture upload.
-2. **File-backed articles** — technical articles stored as static Jinja HTML files in
-   `flaskblog/templates/content_art/`, described by Pydantic models in
-   `flaskblog/new_articles/schema_art.py`. This is the site's actual landing content
-   (`/` redirects to `/art_home`).
+1. **Пользователи и посты в БД** — `User` / `Post` через Flask-SQLAlchemy на PostgreSQL,
+   с регистрацией, входом и загрузкой аватара.
+2. **Статьи из файлов** — технические статьи хранятся как статические Jinja-HTML файлы
+   в `flaskblog/templates/content_art/` и описываются Pydantic-моделями в
+   `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта
+   (`/` перенаправляет на `/art_home`).
 
-**Stack**
+**Стек**
 
-| Concern | Choice |
+| Область | Выбор |
 |---|---|
-| Language | Python 3.12 (`.python-version`) |
-| Package manager | `uv` (`uv.lock` is authoritative) |
-| Web framework | Flask 3.1.2 + Blueprints |
+| Язык | Python 3.12 (`.python-version`) |
+| Менеджер пакетов | `uv` (`uv.lock` — источник истины) |
+| Веб-фреймворк | Flask 3.1.2 + Blueprints |
 | ORM | Flask-SQLAlchemy 3.1.1 → PostgreSQL (`psycopg2-binary`) |
-| Auth | Flask-Login + Flask-Bcrypt |
-| Forms | Flask-WTF / WTForms (+ `email-validator`) |
-| Validation/schemas | Pydantic 2.12 |
-| WSGI server | `waitress` locally, `gunicorn` in Docker |
-| Reverse proxy | nginx with TLS (Docker only) |
-| Images | Pillow (profile-picture thumbnails) |
-| Logging | custom `ConfigLogger` wrapper over `logging.config.dictConfig` |
+| Аутентификация | Flask-Login + Flask-Bcrypt |
+| Формы | Flask-WTF / WTForms (+ `email-validator`) |
+| Валидация/схемы | Pydantic 2.12 |
+| WSGI-сервер | `waitress` локально, `gunicorn` в Docker |
+| Обратный прокси | nginx с TLS (только в Docker) |
+| Изображения | Pillow (миниатюры аватаров) |
+| Логирование | своя обёртка `ConfigLogger` над `logging.config.dictConfig` |
 
-**No test suite and no migration framework exist in this project.**
+**В проекте нет ни тестов, ни фреймворка миграций.**
 
-### Architecture
+### Архитектура
 
-`flaskblog/__init__.py` exposes `create_app(config_class=Config, debug_mode=False)`. It
-instantiates extensions at module level (`db`, `bcrypt`, `login_manager`), then binds them
-inside the factory and registers four blueprints:
+`flaskblog/__init__.py` предоставляет `create_app(config_class=Config, debug_mode=False)`.
+Расширения (`db`, `bcrypt`, `login_manager`) создаются на уровне модуля, затем привязываются
+внутри фабрики, которая регистрирует четыре блюпринта:
 
-| Blueprint | Module | Routes |
+| Блюпринт | Модуль | Маршруты |
 |---|---|---|
 | `art_main` | `new_articles/routesArticles.py` | `/art_home`, `/art/<author>/<art_id>` |
 | `main` | `main/routesMain.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
 | `users` | `users/routesUsers.py` | `/register`, `/login`, `/logout`, `/account` |
-| `errors` | `errors/handlers.py` | app-wide 403 / 404 / 500 handlers |
+| `errors` | `errors/handlers.py` | обработчики 403 / 404 / 500 на уровне приложения |
 
 ```
-flask-blog-1/                   <- project root; ALWAYS the cwd for running anything
-├── pyproject.toml              deps + ruff/black config
+flask-blog-1/                   <- корень проекта; ВСЕГДА cwd для любого запуска
+├── pyproject.toml              зависимости + настройки ruff/black
 ├── uv.lock
-├── local.env                   local env vars — NOT in git, create manually
+├── local.env                   локальные переменные окружения — НЕ в git, создать вручную
 ├── compose-nginx-db.yml        app_flask + nginx + db + pgadmin
-├── docker_manager.sh           net-create | cont-stop helpers
-├── docs/setup-and-run.md       detailed setup report (Russian) — read this first
-├── nginx/                      Docker-nginx, nginx.conf, cert/ (certs not in git)
-└── flaskblog/                  application package
+├── docker_manager.sh           хелперы net-create | cont-stop
+├── docs/setup-and-run.md       подробный отчёт по настройке (рус.) — читать первым
+├── nginx/                      Docker-nginx, nginx.conf, cert/ (сертификатов нет в git)
+└── flaskblog/                  пакет приложения
     ├── __init__.py             create_app(), db, bcrypt, login_manager
-    ├── run.py                  entry point: app = create_app(debug_mode=True)
-    ├── config.py               Config class; load_dotenv(<root>/local.env)
+    ├── run.py                  точка входа: app = create_app(debug_mode=True)
+    ├── config.py               класс Config; load_dotenv(<корень>/local.env)
     ├── models.py               User, Post
-    ├── DockerFlask             application Dockerfile
-    ├── dock_flask.env          container env — NOT in git, create manually
+    ├── DockerFlask             Dockerfile приложения
+    ├── dock_flask.env          env контейнера — НЕ в git, создать вручную
     ├── logger/config_log.py    ConfigLogger + dictConfig
-    ├── main/ users/ new_articles/ errors/   blueprints
+    ├── main/ users/ new_articles/ errors/   блюпринты
     ├── templates/ static/
-    └── log/                    log output (cwd-relative, see Gotchas)
+    └── log/                    вывод логов (относительно cwd, см. «Грабли» в AGENTS.md)
 ```
 
-## Building and Running
+## Сборка и запуск
 
-`docs/setup-and-run.md` is the authoritative, verified reference — consult it for env-var
-tables, Docker preparation steps, and troubleshooting. Summary below.
+`docs/setup-and-run.md` — авторитетный, проверенный справочник; смотрите его для таблиц
+переменных окружения, подготовки Docker и разбора проблем. Ниже — краткая сводка.
 
-### Setup
+### Настройка
 
 ```bash
-cd ~/0_26_MY_pro_one/flask-blog-1
-uv sync                      # creates .venv from uv.lock
+uv sync                      # создаёт .venv по uv.lock
 source .venv/bin/activate
 ```
 
-Then create `local.env` at the project root (it is gitignored). Required keys:
+Затем создайте `local.env` в корне проекта (файл в `.gitignore`). Обязательные ключи:
 
 ```dotenv
-SECRET_KEY=<long-random-string>
+SECRET_KEY=<длинная-случайная-строка>
 DATABASE_URI=postgresql+psycopg2://flask_user:flask_password@127.0.0.1:9032/flask_blog
 LOG_DIR=./log
 LOG_FILE=FLASK.log
 ```
 
-`DB_USER` / `DB_PASSWORD` / `DB_NAME` are consumed by **docker compose**, not by the DSN.
+`DB_USER` / `DB_PASSWORD` / `DB_NAME` использует **docker compose**, а не строка подключения.
 
-### Run locally
+### Локальный запуск
 
 ```bash
-python -m flaskblog.run                                        # preferred
-PYTHONPATH=. python flaskblog/run.py                           # equivalent
-waitress-serve --host=0.0.0.0 --port=5000 flaskblog.run:app    # WSGI target
+python -m flaskblog.run                                        # предпочтительно
+PYTHONPATH=. python flaskblog/run.py                           # эквивалент
+waitress-serve --host=0.0.0.0 --port=5000 flaskblog.run:app    # WSGI-таргет
 gunicorn -w 1 -b 0.0.0.0:5000 flaskblog.run:app
 ```
 
-Then hit `http://127.0.0.1:5000/createDB` once to create tables.
+После старта один раз откройте `http://127.0.0.1:5000/createDB`, чтобы создать таблицы.
 
-**Never run `python flaskblog/run.py`** — Python puts `flaskblog/` (not the project root) on
-`sys.path[0]`, so `from flaskblog import create_app` raises `ModuleNotFoundError`. The
-project is not installed as a package (there is no `[build-system]` in `pyproject.toml`),
-so imports only resolve when the project root is on `sys.path`.
+**Никогда не запускайте `python flaskblog/run.py`** — Python помещает в `sys.path[0]`
+каталог `flaskblog/`, а не корень проекта, поэтому `from flaskblog import create_app`
+падает с `ModuleNotFoundError`. Проект не устанавливается как пакет (в `pyproject.toml`
+нет `[build-system]`), поэтому импорты резолвятся только когда корень проекта находится
+в `sys.path`.
 
-### Run in Docker
-
-```bash
-./docker_manager.sh net-create                       # external net app_net_new, 172.20.0.0/16
-docker compose -f compose-nginx-db.yml build
-docker compose -f compose-nginx-db.yml up -d
-docker compose -f compose-nginx-db.yml logs -f app_flask
-```
-
-Requires `flaskblog/dock_flask.env`, a `.env` beside the compose file, and self-signed certs
-in `nginx/cert/` — all gitignored; see `docs/setup-and-run.md` §5.2. Serves on
-<https://localhost:1443/>; pgAdmin at `/pgadmin`; Postgres exposed on `127.0.0.1:9032`.
-
-### Lint and format
+### Линтеры и форматирование
 
 ```bash
 uv run ruff check .
-uv run ruff format .     # or: uv run black .
+uv run ruff format .     # либо: uv run black .
 ```
 
-Ruff and black are **not** declared dependencies — install them as tools
-(`uv tool install ruff`) or add a dev group.
+Ruff и black **не** объявлены в зависимостях — устанавливайте их как инструменты
+(`uv tool install ruff`) либо добавьте dev-группу.
 
-### Verification
+### Проверка работоспособности
 
-There is no test suite, so verify changes by exercising the app:
+Тестов нет, поэтому изменения проверяются запуском самого приложения:
 
 ```bash
-python -c "from flaskblog import create_app; print(create_app().url_map)"   # expect 13 rules
-python -m flaskblog.run                                                     # then curl /
+python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # ожидается 13
+python -m flaskblog.run                                                                            # затем curl /
 ```
 
-Do not claim a change is verified without actually running something. If you cannot verify,
-say so explicitly.
+13 правил = 12 маршрутов приложения + встроенный `static` от Flask.
 
-## Development Conventions
+Не утверждайте, что изменение проверено, без фактического запуска. Если проверить
+невозможно — сообщите об этом прямо.
 
-### Code style
+---
 
-- Line length **120**, 4-space indent (`pyproject.toml` configures both ruff and black).
-- Ruff intentionally ignores `F401` (unused imports), `E402` (imports not at top), and
-  `F541` (f-string without placeholders). These are load-bearing exemptions — the codebase
-  deliberately imports the logger before other imports, and re-exports names.
-- Heavy decorative comment banners (`# ====`, `# ----`, `#***`) separate logical sections.
-  Match the local style when editing a file; do not strip them.
-- Russian is used for UI strings, flash messages, docstrings, and article content. Keep new
-  user-facing text and comments consistent with the surrounding file's language.
+## Агентный режим — ты оркестратор
 
-### Blueprint module pattern
+Ты — оркестратор и главный агент. Ты не пишешь код. Ты планируешь, делегируешь,
+проверяешь доказательства и принимаешь решения. [REQUIREMENTS.md](REQUIREMENTS.md) —
+контракт текущего задания: работа завершена только тогда, когда каждый его критерий
+успеха объективно продемонстрирован. Правила для всей команды — в [AGENTS.md](AGENTS.md)
+(раздел «Агентный режим»); они обязательны и для тебя, и для каждого субагента.
 
-Every route module follows the same opening sequence — preserve it:
+### Жизненный цикл заданий
 
-```python
-from flask import render_template, Blueprint
-from flaskblog.logger.config_log import ConfigLogger
-logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")   # import-order exemption (E402)
-from flaskblog import db
-```
+- В `REQUIREMENTS.md` всегда лежит **одно текущее задание** по этому проекту.
+- Когда все его критерии успеха подтверждены доказательствами — задание считается
+  выполненным, и пользователь кладёт в `REQUIREMENTS.md` следующее. Цикл повторяется
+  без изменения остальных файлов.
+- Не начинай новое задание, пока текущее не закрыто; не расширяй его рамки сам.
 
-Logger names come from `logging_config["loggers"]` in `logger/config_log.py`:
-`"Stdout"` (console), `"OnlyFile"` (file), `"FileStdout"` (both). Route handlers log with
-`logFC.info(...)`. Blueprint objects are module-level and named after the blueprint
-(`main`, `users`, `errors`, `art_main`); cross-blueprint redirects use the endpoint form
-`url_for('art_main.art_home')`.
+### Команда
 
-### Templates
+| Роль | Где живёт | Модель | Зона ответственности |
+|---|---|---|---|
+| Оркестратор | главная сессия (этот файл) | glm-5.3 | план, делегирование, ревью, триаж, финальное решение |
+| frontend-dev | `.qwen/agents/frontend-dev.md` | nordrouter/minimax/minimax-m3 | шаблоны, статика, вёрстка |
+| backend-dev | `.qwen/agents/backend-dev.md` | nordrouter/moonshotai/kimi-k2.7-code | Python-код, маршруты, схемы, логика |
+| qa | `.qwen/agents/qa.md` | nordrouter/minimax/minimax-m3 | проверка запуском, curl-прогоны, скриншоты, DEFECTS.md |
+| adversary | `.qwen/agents/adversary.md` | nordrouter/minimax/minimax-m3 | враждебные прогоны, ADVERSARIAL_REVIEW.md |
 
-Two independent layout hierarchies — pick the right parent:
+В этом проекте «фронтенд» — это Jinja-шаблоны и стат (`flaskblog/templates/`,
+`flaskblog/static/`), а не отдельное SPA. Дели работу между frontend-dev и backend-dev
+по этому рубежу: HTML/CSS/JS — frontend-dev; Python-модули — backend-dev.
 
-- `layout.html` — auth/informational pages (`about`, `login`, `register`, `account`,
-  `errors/*`). Includes `includes/_flash_msg.html`, so flash messages only render here.
-- `new_art/art_base.html` — article pages (`art_home`, `art_author`), with a sidebar and its
-  own `new_art/includes/_art_*.html` partials. Does **not** render flash messages.
+### Цикл работы
 
-Both share the footer macro `includes/_footer_macro.html::footer_new(current_user)`.
-Article bodies live in `templates/content_art/artN.html` and are read at request time by
-`read_html()`, then injected via `art.content`. Static assets are under
-`static/art_css/` (`base.css`, `light-theme.css`, `dark-theme.css`, `scripts.js`) and
-`static/profile_pics/`.
+1. Прочитай REQUIREMENTS.md и соответствующую часть контекста проекта выше. Составь
+   короткий план: кто что меняет, какие файлы, как проверяем. Для задач, где границы
+   фронт/бэк не пересекаются, фиксируй это в плане явно.
+2. Запусти нужных разработчиков (frontend-dev / backend-dev) с их спецификациями.
+   Спецификация говорит: что менять, каких соглашений из AGENTS.md держаться, какому
+   критерию успеха это служит.
+3. Когда разработчики доложат о готовности, проверь доказательства: диффы, вывод
+   `ruff check`, запуск приложения, curl-вывод, скриншоты. Чего-то не хватает — верни
+   конкретные правки исполнителю.
+4. Поручи qa прогнать проверки: запуск приложения, curl-сценарии из критериев успеха,
+   скриншоты, регресс соседних маршрутов (`/art_home`, `/`, `/about`).
+5. Отправь adversary на короткий враждебный прогон по изменённой функциональности.
+   Проведи триаж каждой находки.
+6. Пройди критерии успеха из REQUIREMENTS.md один за другим: каждый должен
+   подтверждаться доказательством — curl-выводом, скриншотом или логом. Только после
+   этого докладывай пользователю о выполнении задания.
 
-### Data model & schemas
+### Дефекты
 
-- SQLAlchemy models use the classic `db.Column` declarative style (not 2.0
-  `Mapped[]`/`mapped_column`). `User.__init__` is overridden with keyword defaults.
-- `ArticleLang` fields: `author`, `lang`, `art_id: int`, `title`, `file_name`, `content`.
-- Article metadata is stored in `new_articles/articles.yaml`; adding an article means adding
-  a YAML record and the matching `.html`, `.md`, or `.markdown` file in
-  `templates/content_art/`. `art_dict_file` is loaded from YAML and keyed by `art_id`,
-  which is what `/art/<author>/<art_id>` looks up.
-- `schema_art.py` also contains the old `articles` / `articles_dict` pair with inline
-  content from `arts_content.py`. Routes use the new file-backed dictionary; leave the old
-  pair alone unless asked.
+- Отправляй OPEN-дефекты из DEFECTS.md нужному разработчику, начиная с наивысшей серьёзности.
+- Разработчики сообщают ровно один результат: ИСПРАВЛЕНО, НЕ ВОСПРОИЗВОДИТСЯ или
+  РАБОТАЕТ КАК ЗАДУМАНО, с деталями. Запиши это в DEFECTS.md — статус FIX-READY или
+  DISPUTED, причина разработчика дословно и строка в History.
+- Ты никогда не устанавливаешь CLOSED. Дефект закрывает только qa, после перепроверки.
+- Ты можешь установить REJECTED с письменной причиной, когда исправления не будет.
 
-### Gotchas — verify against these before debugging
+### Триаж adversary
 
-- **`DATABASE_URI` is the only DSN source.** The `f"postgresql+psycopg2://..."` assembly
-  from `DB_*` parts is commented out in `config.py`. Setting `DB_HOST`/`DB_PORT` alone does
-  nothing; a missing `DATABASE_URI` fails at `db.init_app(app)`.
-- **`LOG_DIR` is mandatory.** If unset, `Config.LOG_DIR is None` and
-  `os.path.exists(None)` raises `TypeError` at *import* of `flaskblog`, not inside
-  `create_app()` — because the logger is initialised before `db`/`bcrypt` are declared.
-- **`LOG_DIR` must be a single level.** `ConfigLogger.__createLogDir` uses `os.mkdir`, not
-  `os.makedirs`, so nested paths like `./log_app/flask` raise `FileNotFoundError`.
-- **Two cwd-relative behaviours.** A relative `LOG_DIR` resolves against the process cwd,
-  and `schema_art.get_path_dir()` builds the article path from `os.getcwd()` +
-  `flaskblog/templates/content_art`. Running from anywhere but the project root breaks
-  article loading. Prefer absolute paths in containers (`/flaskblog/log`).
-- **No migrations.** `db.create_all()` runs only from the `/createDB` route and will not
-  alter existing tables. Changing `models.py` requires manual recreation or adding
-  Flask-Migrate.
-- **`run.py` hardcodes `debug_mode=True`**, which the Docker `gunicorn` command also picks
-  up. Treat this as a known production concern.
-- **Compose quirks:** `version: "3.7"` is deprecated under Compose v2, and `app_flask`
-  declares `depends_on: nginx` rather than `db` — so the first DB call after a cold start
-  may fail and need a retry.
+Для каждой ADV-записи в ADVERSARIAL_REVIEW.md оцени её по REQUIREMENTS.md и реши:
 
-### Git
+- ACCEPTED — поручи qa воспроизвести и завести DEF-запись, затем установи disposition
+  в `ACCEPTED -> DEF-NNN`.
+- REJECTED — запиши `REJECTED - причина` в disposition.
 
-Branch at time of writing: `alphaFlask`. Commit subjects are short and lowercase
-(`new 26 start`, `restore theme`, `added psycopg2`). Match that terseness. Note that
-`log/`, `instance/`, `pg_db/`, `*.env`, `.idea/`, and the nginx certs are gitignored —
-never add them. Stage only files relevant to the change; several files are currently
-modified in the working tree.
+Ни одна запись не остаётся PENDING, когда задание закрыто.
+
+### Дисциплина затрат
+
+Трать свою модель на суждения, а не на набор текста:
+
+- Никогда не пиши и не редактируй код. Ты можешь редактировать только markdown-файлы
+  (планы, DEFECTS.md, disposition и т.п.).
+- Читай диффы, сводки, вывод проверок и скриншоты — а не целые деревья исходников.
+- Не микроуправляй в середине задачи. Позволь субагентам закончить и отчитаться.
+- Держи планы и спецификации задач короткими.
+- Запускать приложение и гонять проверки — задача субагентов, не твоя.
