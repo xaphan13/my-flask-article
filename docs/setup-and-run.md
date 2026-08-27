@@ -7,6 +7,7 @@
 - Менеджер пакетов: `uv` (есть `uv.lock`)
 - WSGI-серверы: `waitress` (локально), `gunicorn` (в Docker)
 - БД: PostgreSQL через `psycopg2-binary` + Flask-SQLAlchemy
+- Статьи: метаданные в YAML, содержимое в HTML или Markdown (`markdown`, `PyYAML`)
 
 ---
 
@@ -33,7 +34,12 @@ flask-blog-1/                  <- корень проекта (ВСЕГДА cwd 
     ├── DockerFlask            Dockerfile приложения
     ├── dock_flask.env         env для контейнера (НЕ в git, создать вручную)
     ├── logger/config_log.py   ConfigLogger + dictConfig
-    ├── main/, users/, new_articles/, errors/   блюпринты
+    ├── new_articles/
+    │   ├── articles.yaml      метаданные статей
+    │   ├── schema_art.py      загрузка YAML, чтение HTML и рендер Markdown
+    │   └── routesArticles.py  список и показ статей
+    ├── templates/content_art/ HTML- и Markdown-файлы статей
+    ├── main/, users/, errors/ остальные блюпринты
     ├── templates/, static/
     └── log/                   каталог логов (в git нет; создаётся на старте
                                относительно cwd, см. п. 6.5)
@@ -149,6 +155,23 @@ DATABASE_URI=sqlite:////home/max/0_26_MY_pro_one/flask-blog-1/instance/blog.db
 ```
 
 Каталог `instance/` уже в `.gitignore`; создать его перед первым запуском (`mkdir -p instance`).
+
+### 3.1 Добавление статьи
+
+Метаданные находятся в `flaskblog/new_articles/articles.yaml`. Для новой статьи нужно:
+
+1. добавить запись с уникальным целочисленным `art_id`, автором, языком, заголовком и `file_name`;
+2. положить соответствующий файл в `flaskblog/templates/content_art/`;
+3. перезапустить приложение, потому что YAML загружается при импорте модуля.
+
+Поддерживаемые форматы тела:
+
+- `.html` — содержимое возвращается без преобразования;
+- `.md` и `.markdown` — преобразуются библиотекой `markdown` с расширениями
+  `fenced_code` и `tables`.
+
+Результат выводится через `{{ art.content|safe }}`, поэтому HTML и Markdown-файлы должны
+считаться доверенным содержимым репозитория.
 
 ---
 

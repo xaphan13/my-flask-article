@@ -1,10 +1,10 @@
 # 01 — Карта проекта
 
-> Статус: проверено на коммите `aa763d0` (ветка `alphaFlask`), Python 3.12.13, Flask 3.1.2.
-> Все утверждения о поведении подтверждены запуском кода, а не выведены из чтения.
+> Статус: актуально для ветки `fix_html`, HEAD `b5d7533`, Python 3.12, Flask 3.1.2.
+> Описание сфокусировано на текущей структуре исходного дерева и не заменяет инструкцию
+> по запуску: [setup-and-run.md](setup-and-run.md).
 > Связанные документы: [02_architecture.md](02_architecture.md) · [03_execution_flow.md](03_execution_flow.md) ·
-> [04_code_quality.md](04_code_quality.md) · [05_optimization_roadmap.md](05_optimization_roadmap.md) ·
-> инструкция по запуску: [setup-and-run.md](setup-and-run.md)
+> [04_code_quality.md](04_code_quality.md) · [05_optimization_roadmap.md](05_optimization_roadmap.md)
 
 ## 1. Назначение проекта
 
@@ -12,10 +12,11 @@
 собранный по паттерну application factory. Проект совмещает две несвязанные модели контента.
 
 **Первая модель — файловые статьи.** Это фактический продукт сайта: корень `/` редиректит
-на `/art_home`, список статей формируется из Python-константы `art_files` в
-`flaskblog/new_articles/schema_art.py`, а тело каждой статьи лежит отдельным Jinja/HTML-файлом
-в `flaskblog/templates/content_art/` и читается с диска на каждый запрос. База данных в этом
-потоке не участвует вообще.
+на `/art_home`, метаданные пяти статей загружаются из
+`flaskblog/new_articles/articles.yaml`, а тело каждой статьи лежит отдельным HTML- или
+Markdown-файлом в `flaskblog/templates/content_art/`. При открытии статьи файл читается с
+диска на каждый запрос; Markdown преобразуется в HTML библиотекой `markdown`. База данных в
+этом потоке не участвует вообще.
 
 **Вторая модель — БД-сущности `User` / `Post`.** Реализована регистрация, вход, выход и
 редактирование профиля с загрузкой аватара (Flask-SQLAlchemy + PostgreSQL, Flask-Login,
@@ -68,7 +69,7 @@ flask-blog-1/                       корень проекта — ВСЕГДА
 │                                   local.env задаёт DATABASE_URI=sqlite:///site.db.
 │                                   Внутри таблицы user (1 запись) и post (0). Gitignored
 │
-└── flaskblog/                      пакет приложения (723 строки Python всего)
+└── flaskblog/                      пакет приложения
     │
     ├── __init__.py                 (42) ЯДРО. Объявляет модуль-level синглтоны db,
     │                               bcrypt, login_manager; фабрика
@@ -117,16 +118,14 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     │
     ├── new_articles/
     │   ├── routesArticles.py       (28) блюпринт art_main: /art_home (список) и
-    │   │                           /art/<author>/<art_id> (чтение файла + рендер)
-    │   ├── schema_art.py           (102) КОНТРАКТ СТАТЕЙ. Pydantic-модель ArticleLang;
-    │   │                           get_path_dir() (путь от os.getcwd()); read_html();
-    │   │                           NEW-версия art_files + art_dict_file (файловая,
-    │   │                           используется роутами); old-версия articles +
-    │   │                           articles_dict (inline-контент, не используется);
-    │   │                           а также неиспользуемые схемы UserUpdateBody,
-    │   │                           PostUpdateBody, UserSchemaResp, PostSchemaResp и др.
-    │   ├── arts_content.py         (121) inline-тексты art1..art3 для old-версии.
-    │   │                           Импортируется schema_art.py, но в рендер не попадает
+    │   │                           /art/<author>/<art_id> (чтение и рендер файла)
+    │   ├── schema_art.py           контракт статей: Pydantic-модель ArticleLang;
+    │   │                           загрузка articles.yaml; art_files + art_dict_file;
+    │   │                           read_html() и render_article() с преобразованием
+    │   │                           Markdown; ниже сохранены legacy-структуры и DTO
+    │   ├── articles.yaml           метаданные пяти статей и имена файлов контента
+    │   ├── arts_content.py         inline-тексты art1..art3 для legacy-структур.
+    │   │                           В рабочий рендер статей не попадают
     │   └── data_ex.py              (34) МЁРТВЫЙ модуль: классы ArticleEx, ArticleLang22,
     │                               список art_list. Упоминается только в
     │                               закомментированной строке routesMain.py:16
@@ -147,8 +146,9 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     │   │   ├── art_home.html       список статей по title_list
     │   │   ├── art_author.html     страница статьи; выводит art.content|safe
     │   │   └── includes/           _art_head.html, _art_header.html, _art_scripts.html
-    │   ├── content_art/            ТЕЛА СТАТЕЙ: art1..art4.html. Читаются с диска
-    │   │                           на каждый запрос функцией read_html()
+    │   ├── content_art/            ТЕЛА СТАТЕЙ: четыре HTML-файла `art1.html`–`art4.html`
+    │   │                           и Markdown-файл `gemini-pro-fastapi-1.md`. Читаются с диска на каждый
+    │   │                           запрос; Markdown рендерится функцией render_article()
     │   └── errors/                 403.html, 404.html, 500.html, new.html (не используется)
     │
     └── static/
@@ -251,7 +251,7 @@ flask-blog-1/                       корень проекта — ВСЕГДА
 
 | Показатель | Значение |
 |---|---|
-| Python-кода | 723 строки в 13 непустых модулях (`flaskblog/**/*.py`) |
+| Python-кода | Текущее количество зависит от состава исходников; метрика не фиксируется в этом документе |
 | Из них контент/мёртвый код | 121 (`arts_content.py`) + 34 (`data_ex.py`) ≈ 21 % |
 | Маршрутов в `url_map` | 13 (12 прикладных + встроенный `static`) |
 | Блюпринтов | 4 (`art_main`, `main`, `users`, `errors`) |

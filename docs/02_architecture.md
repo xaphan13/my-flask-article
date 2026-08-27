@@ -1,6 +1,6 @@
 # 02 — Архитектура и паттерны
 
-> Проверено на коммите `aa763d0` (ветка `alphaFlask`). Карта файлов: [01_project_structure.md](01_project_structure.md).
+> Актуально для ветки `fix_html`, HEAD `b5d7533`. Карта файлов: [01_project_structure.md](01_project_structure.md).
 > Пошаговая логика выполнения: [03_execution_flow.md](03_execution_flow.md).
 
 ## 1. Высокоуровневая архитектура
@@ -51,7 +51,7 @@
 
 **Ключевая архитектурная особенность:** сервисный слой отсутствует. Бизнес-логика живёт
 непосредственно в обработчиках маршрутов, которые напрямую обращаются и к `db.session`,
-и к файловой системе. Для объёма 723 строк это осознанно приемлемо, но именно это
+и к файловой системе. Для текущего небольшого объёма проекта это осознанно приемлемо, но именно это
 блокирует юнит-тестирование (см. [04](04_code_quality.md) §3).
 
 > **О СУБД в этом документе.** Далее PostgreSQL упоминается как целевая конфигурация
@@ -66,7 +66,7 @@
 
 | | Контур статей (основной) | Контур пользователей |
 |---|---|---|
-| Источник данных | Python-константа `art_files` + файлы `.html` | PostgreSQL |
+| Источник данных | `articles.yaml` + файлы `.html`/`.md`/`.markdown` | PostgreSQL |
 | Точки входа | `/art_home`, `/art/<author>/<art_id>` | `/register`, `/login`, `/logout`, `/account` |
 | Модель | Pydantic `ArticleLang` | SQLAlchemy `User`, `Post` |
 | База шаблонов | `new_art/art_base.html` | `layout.html` |
@@ -184,14 +184,19 @@ class ConfigLogger:
 Роль репозитория для статей играет пара «словарь в памяти + функция чтения файла»:
 
 ```python
-art_files: List[ArticleLang] = [ ArticleLang(art_id=1, file_name="art1.html", ...), ... ]
+articles_data = yaml.safe_load(articles_path.read_text(encoding="utf8"))
+art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
 art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
 
 def read_html(name_html: str, name_dir: str = get_path_dir()) -> str: ...
+def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 ```
 
-Индекс (метаданные) статичен и загружается при импорте; тело статьи читается с диска
-на каждый запрос. Абстракции репозитория нет — обработчик сам вызывает `read_html`.
+Индекс (метаданные) загружается из YAML при импорте, валидируется через `ArticleLang` и
+остаётся статичным до перезапуска процесса. Тело статьи читается с диска на каждый запрос.
+`render_article()` возвращает HTML-файл без изменений, а для `.md`/`.markdown` вызывает
+`markdown(..., extensions=["fenced_code", "tables"])`. Абстракции репозитория нет —
+обработчик сам вызывает `render_article()`.
 
 **Опасное место.** Обработчик мутирует общий объект:
 
@@ -246,7 +251,9 @@ GET /art/Max/1
   │    ├─ logFC.info(...)                          → stdout + файл лога
   │    ├─ art = art_dict_file[art_id]              словарь в памяти
   │    │    KeyError при неизвестном id → 500, НЕ 404 (проверено)
-  │    ├─ content = read_html(art.file_name)       ЧТЕНИЕ ДИСКА, каждый запрос
+  │    ├─ content = render_article(art.file_name)  ЧТЕНИЕ ДИСКА, каждый запрос
+  │    │    ├─ .html → содержимое без преобразования
+  │    │    └─ .md/.markdown → markdown(..., fenced_code + tables)
   │    │    каталог зафиксирован при импорте (см. 01 §4)
   │    └─ art.content = content                    мутация общего объекта
   │
@@ -308,7 +315,7 @@ POST /account  (multipart: username, email, picture)
 | Сессия пользователя | cookie на клиенте | подписанный cookie Flask + Flask-Login | server-side хранилища сессий нет |
 | Постоянные данные | СУБД по `DATABASE_URI` (целевая PostgreSQL, фактически SQLite) | Flask-SQLAlchemy | схема создаётся только через `/createDB` |
 | Индекс статей | память процесса | `art_dict_file`, заполняется при импорте | изменение состава статей требует перезапуска |
-| Тело статьи | файловая система | `read_html()` на каждый запрос | не кэшируется |
+| Тело статьи | файловая система | `render_article()` на каждый запрос | HTML возвращается как есть; Markdown преобразуется в HTML; кэша нет |
 | Аватары | локальный диск контейнера/хоста | `static/profile_pics/` | НЕ в volume → теряются при пересборке контейнера |
 | Тема оформления | `localStorage` браузера | `static/art_css/scripts.js` | на сервер не передаётся |
 | Flash-сообщения | сессия | `flash()` / `get_flashed_messages()` | видны только на базе `layout.html` |
