@@ -9,7 +9,6 @@ logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
 from flaskblog.config import Config
 
-
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
@@ -33,9 +32,9 @@ def create_app(config_class=Config, debug_mode=False):
 
     app.register_blueprint(art_main)
 
-    from flaskblog.users.routesUsers import users
-    from flaskblog.main.routesMain import main
     from flaskblog.errors.handlers import errors
+    from flaskblog.main.routesMain import main
+    from flaskblog.users.routesUsers import users
 
     app.register_blueprint(users)
     app.register_blueprint(main)

@@ -1,11 +1,10 @@
-from flask import render_template, request, Blueprint, flash, redirect, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from flaskblog.logger.config_log import ConfigLogger
 
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
 from flaskblog import db
-
 
 main = Blueprint("main", __name__)
 

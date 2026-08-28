@@ -1,8 +1,9 @@
-from multipledispatch import dispatch
 import logging.config
 import os
-from flaskblog.config import Config
 
+from multipledispatch import dispatch
+
+from flaskblog.config import Config
 
 LOG_DIR = Config.LOG_DIR  # "./log"
 LOG_FILE = Config.LOG_FILE  # "FLASK.log"

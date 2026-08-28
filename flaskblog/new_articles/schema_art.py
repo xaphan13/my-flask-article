@@ -1,10 +1,10 @@
-from pydantic import BaseModel
-from typing import List, Optional, Dict
-from datetime import datetime
-from markdown import markdown
-from pathlib import Path
 import os
+from datetime import datetime
+from pathlib import Path
+
 import yaml
+from markdown import markdown
+from pydantic import BaseModel
 
 from flaskblog.logger.config_log import ConfigLogger
 
@@ -56,22 +56,22 @@ articles_path = Path(__file__).with_name("articles.yaml")
 with articles_path.open("r", encoding="utf8") as articles_file:
     articles_data = yaml.safe_load(articles_file)
 
-art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
-art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
+art_files: list[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
+art_dict_file: dict[int, ArticleLang] = {art.art_id: art for art in art_files}
 
 
 # ==============================================================================
 # +++++++++++++++++++++++++++ BaseModel - pydantic +++++++++++++++++++++++++++++
 # ------------------------------------------------------------------------------
 class UserUpdateBody(BaseModel):
-    nickname: Optional[str] = ""
-    email: Optional[str] = ""
+    nickname: str | None = ""
+    email: str | None = ""
 
 
 class PostUpdateBody(BaseModel):
     id: int
-    title: Optional[int] = 1
-    content: Optional[str] = ""
+    title: int | None = 1
+    content: str | None = ""
 
 
 class UserPostBase(BaseModel):
@@ -91,7 +91,7 @@ class PostSchemaResp(UserPostBase):
 
 
 class UserSchemaPostsResp(UserSchemaResp):
-    posts: List[PostSchemaResp]
+    posts: list[PostSchemaResp]
 
 
 class PostSchemaAuthorResp(PostSchemaResp):

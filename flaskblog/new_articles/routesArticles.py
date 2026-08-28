@@ -1,10 +1,10 @@
-from flask import render_template, Blueprint
+from flask import Blueprint, render_template
 
 from flaskblog.logger.config_log import ConfigLogger
 
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
-from flaskblog.new_articles.schema_art import art_dict_file, ArticleLang, render_article
+from flaskblog.new_articles.schema_art import ArticleLang, art_dict_file, render_article
 
 art_main = Blueprint("art_main", __name__)
 

@@ -1,18 +1,17 @@
 import os
 import secrets
-from PIL import Image
 
-from flask import render_template, url_for, flash, redirect, request, Blueprint, current_app
-from flask_login import login_user, current_user, logout_user, login_required
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+from PIL import Image
 
 from flaskblog.logger.config_log import ConfigLogger
 
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
-from flaskblog import db, bcrypt
+from flaskblog import bcrypt, db
 from flaskblog.models import User
-from flaskblog.users.formsUsers import RegistrationForm, LoginForm, UpdateAccountForm
-
+from flaskblog.users.formsUsers import LoginForm, RegistrationForm, UpdateAccountForm
 
 users = Blueprint("users", __name__)
 
