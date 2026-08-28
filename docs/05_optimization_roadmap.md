@@ -192,8 +192,9 @@ flask db init && flask db migrate -m "baseline" && flask db upgrade
 
 ### 4.3 Удалить мёртвый код (P2, механическая работа)
 
-L1-L6, суммарно ≈ 21 % Python-кода: `data_ex.py`, `loggerSettings.json`,
-`articles`/`articles_dict` + `arts_content.py`, 7 неиспользуемых DTO,
+L1-L6 (частично выполнено 2026-08-28: удалены `articles`/`articles_dict` и весь
+`arts_content.py`), суммарно ≈ 11 % Python-кода: `data_ex.py`,
+`loggerSettings.json`, 7 неиспользуемых DTO в `schema_art.py`,
 `templates/errors/new.html`. Отдельно решить судьбу `Post` (L6): либо реализовать CRUD,
 либо удалить модель — «объявлено, но не используется» вводит в заблуждение и раздувает
 контекст для AI-агентов.

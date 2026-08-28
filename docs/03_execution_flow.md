@@ -80,8 +80,8 @@ create_app(config_class=Config, debug_mode=False)
 ```
 
 Побочный эффект импорта блюпринтов: при импорте `routesArticles` подтягивается
-`schema_art`, который на уровне модуля создаёт все объекты `ArticleLang`, словари
-`art_dict_file` / `articles_dict` и **вычисляет `get_path_dir()`** как значение по
+`schema_art`, который на уровне модуля создаёт все объекты `ArticleLang`, словарь
+`art_dict_file` и **вычисляет `get_path_dir()`** как значение по
 умолчанию у `read_html`. Каталог статей фиксируется именно здесь и навсегда.
 
 Ни `before_request`, ни `after_request`, ни `teardown_appcontext` в проекте не

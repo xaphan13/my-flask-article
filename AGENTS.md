@@ -215,10 +215,9 @@ from flaskblog import db
   добавить туда запись и создать соответствующий файл `.html`, `.md` или `.markdown`
   в `templates/content_art/`. Словарь `art_dict_file` загружается из YAML и
   индексирован по `art_id`; именно его ищет маршрут `/art/<author>/<art_id>`.
-- В `schema_art.py` также есть пара `articles` / `articles_dict`, помеченная как
-  «old version» (контент инлайном из `arts_content.py`), рядом с файловым
-  `art_dict_file`. Маршруты используют новый файловый словарь; старую пару не трогайте
-  без отдельной просьбы.
+  (Legacy-пара `articles`/`articles_dict` и `arts_content.py` удалены 2026-08-28;
+  ниже в `schema_art.py` остались только DTO для несуществующего API — их не трогайте
+  без отдельной просьбы.)
 
 ## Грабли — сверьтесь с этим списком перед отладкой
 
@@ -334,7 +333,7 @@ from flaskblog import db
 | Агент | Зона (можно редактировать) | Чем проверяет изменения | Особые запреты |
 |---|---|---|---|
 | frontend-dev | `flaskblog/templates/`, `flaskblog/static/` | запуск из корня: `python -m flaskblog.run`; просмотр изменённых страниц; скриншот в `screenshots/` | Python-модули и `articles.yaml` — зона backend-dev |
-| backend-dev | Python-модули `flaskblog/`, `flaskblog/new_articles/articles.yaml` | `uv run ruff check .`; `python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"` (ожидается 13); curl изменённых маршрутов | `templates/`, `static/`; старая пара `articles`/`articles_dict` в `schema_art.py`; устаревшие API из раздела выше |
+| backend-dev | Python-модули `flaskblog/`, `flaskblog/new_articles/articles.yaml` | `uv run ruff check .`; `python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"` (ожидается 13); curl изменённых маршрутов | `templates/`, `static/`; устаревшие API из раздела выше |
 | qa | `e2e/`, `DEFECTS.md`, `screenshots/` | curl-сценарии из критериев успеха REQUIREMENTS.md; регресс: `/`, `/art_home`, `/art/<author>/<art_id>`, `/about` | любой код продукта |
 | adversary | `ADVERSARIAL_REVIEW.md`, `screenshots/` | curl по запущенному приложению; логи приложения | всё, кроме своих файлов |
 

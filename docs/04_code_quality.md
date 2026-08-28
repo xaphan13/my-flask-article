@@ -40,15 +40,14 @@
 
 ### 2.2 Нарушения связности
 
-**`flaskblog/new_articles/schema_art.py` — три роли в одном модуле (102 строки).**
+**`flaskblog/new_articles/schema_art.py` — две роли в одном модуле (97 строк).**
 
 | Что там лежит | Используется ли |
 |---|---|
 | `ArticleLang` + загрузка YAML + `art_files` + `art_dict_file` + `read_html`/`render_article` — контракт статей | да, роутами |
-| `articles` + `articles_dict` (old version, inline-контент из `arts_content.py`) | нет |
 | `UserUpdateBody`, `PostUpdateBody`, `UserPostBase`, `UserSchemaResp`, `PostSchemaResp`, `UserSchemaPostsResp`, `PostSchemaAuthorResp` — DTO для API, которого не существует | нет |
 
-Работающая часть — примерно половина модуля. Имя `schema_art` описывает лишь одну из трёх
+Работающая часть — примерно две трети модуля. Имя `schema_art` описывает лишь одну из двух
 ролей, поэтому найти в нём «где читаются файлы статей» неочевидно.
 
 **`flaskblog/logger/config_log.py` — класс и его конфигурация в одном файле.** Словарь
@@ -271,11 +270,11 @@ logFC.info("'create_app 5' app.config:\n" + "\n".join(f"    {k} = {app.config[k]
 |---|---|---|
 | L1 | Мёртвый модуль целиком | `flaskblog/new_articles/data_ex.py` (34 строки) — упоминается только в закомментированной строке `routesMain.py:16` |
 | L2 | Мёртвый конфиг | `flaskblog/logger/loggerSettings.json` — не читается ни одним `.py` (проверено) |
-| L3 | Мёртвая ветка данных | `articles` / `articles_dict` + весь `arts_content.py` (121 строка) |
+| L3 | ~~Мёртвая ветка данных~~ | Удалено 2026-08-28: `articles` / `articles_dict` + весь `arts_content.py` (121 строка) вычищены из `schema_art.py` |
 | L4 | Мёртвые DTO | 7 Pydantic-схем в `schema_art.py` для несуществующего API |
 | L5 | Мёртвый шаблон | `templates/errors/new.html` |
 | L6 | Модель без применения | `Post` в `models.py` — ни одного маршрута |
-| L7 | Устаревшие API | `x.dict()` → `PydanticDeprecatedSince20`; class-based `Config` в `UserPostBase` (`schema_art.py:81`) → то же предупреждение (оба проверены); `datetime.utcnow` (устарело в Python 3.12); `User.query.get()` — legacy-API SQLAlchemy |
+| L7 | Устаревшие API | `x.dict()` → `PydanticDeprecatedSince20`; class-based `Config` в `UserPostBase` (`schema_art.py:77`) → то же предупреждение (оба проверены); `datetime.utcnow` (устарело в Python 3.12); `User.query.get()` — legacy-API SQLAlchemy |
 | L8 | Бессмысленный вызов | `db.session.commit()` сразу после `db.create_all()` — DDL идёт вне сессии |
 | L9 | Отладочный код в проде | 5 демонстрационных `flash()` на `/about` |
 | L10 | Неверный ответ на действие | `/createDB` возвращает `about.html` с заголовком «About» |

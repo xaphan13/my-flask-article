@@ -119,13 +119,11 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     ├── new_articles/
     │   ├── routesArticles.py       (28) блюпринт art_main: /art_home (список) и
     │   │                           /art/<author>/<art_id> (чтение и рендер файла)
-    │   ├── schema_art.py           контракт статей: Pydantic-модель ArticleLang;
+    │   ├── schema_art.py           (97) контракт статей: Pydantic-модель ArticleLang;
     │   │                           загрузка articles.yaml; art_files + art_dict_file;
     │   │                           read_html() и render_article() с преобразованием
-    │   │                           Markdown; ниже сохранены legacy-структуры и DTO
+    │   │                           Markdown; ниже — DTO для несуществующего API
     │   ├── articles.yaml           метаданные пяти статей и имена файлов контента
-    │   ├── arts_content.py         inline-тексты art1..art3 для legacy-структур.
-    │   │                           В рабочий рендер статей не попадают
     │   └── data_ex.py              (34) МЁРТВЫЙ модуль: классы ArticleEx, ArticleLang22,
     │                               список art_list. Упоминается только в
     │                               закомментированной строке routesMain.py:16
@@ -146,9 +144,12 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     │   │   ├── art_home.html       список статей по title_list
     │   │   ├── art_author.html     страница статьи; выводит art.content|safe
     │   │   └── includes/           _art_head.html, _art_header.html, _art_scripts.html
-    │   ├── content_art/            ТЕЛА СТАТЕЙ: четыре HTML-файла `art1.html`–`art4.html`
-    │   │                           и Markdown-файл `gemini-pro-fastapi-1.md`. Читаются с диска на каждый
-    │   │                           запрос; Markdown рендерится функцией render_article()
+    │   ├── content_art/            ТЕЛА СТАТЕЙ: `art1.html`–`art4.html` и
+    │   │                           Markdown-файлы. В `articles.yaml` зарегистрированы
+    │   │                           пять (включая `gemini-pro-fastapi-1.md`); ещё три
+    │   │                           `.md` лежат в каталоге без записи в YAML. Читаются
+    │   │                           с диска на каждый запрос; Markdown рендерится
+    │   │                           функцией render_article()
     │   └── errors/                 403.html, 404.html, 500.html, new.html (не используется)
     │
     └── static/
@@ -252,7 +253,7 @@ flask-blog-1/                       корень проекта — ВСЕГДА
 | Показатель | Значение |
 |---|---|
 | Python-кода | Текущее количество зависит от состава исходников; метрика не фиксируется в этом документе |
-| Из них контент/мёртвый код | 121 (`arts_content.py`) + 34 (`data_ex.py`) ≈ 21 % |
+| Из них мёртвый код | 34 (`data_ex.py`) + ~32 (DTO в `schema_art.py`) ≈ 11 % |
 | Маршрутов в `url_map` | 13 (12 прикладных + встроенный `static`) |
 | Блюпринтов | 4 (`art_main`, `main`, `users`, `errors`) |
 | ORM-моделей | 2 (`User`, `Post`; для `Post` нет ни одного маршрута) |
