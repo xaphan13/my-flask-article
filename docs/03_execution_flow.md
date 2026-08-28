@@ -160,7 +160,7 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 
 ### 3.1 Отображение списка статей — `art_home`
 
-`flaskblog/new_articles/routesArticles.py`:
+`../flaskblog/new_articles/routes_articles.py`:
 
 ```python
 @art_main.route("/art_home")

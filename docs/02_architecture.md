@@ -89,14 +89,14 @@ login_manager = LoginManager()
 
 
 def create_app(config_class=Config, debug_mode=False):
-    app = Flask(__name__)
-    app.config.from_object(config_class)  # 2. конфиг из класса
-    app.config["DEBUG"] = debug_mode
-    db.init_app(app)  # 3. привязка расширений к экземпляру
-    ...
-    from flaskblog.new_articles.routesArticles import art_main  # 4. импорт внутри
+  app = Flask(__name__)
+  app.config.from_object(config_class)  # 2. конфиг из класса
+  app.config["DEBUG"] = debug_mode
+  db.init_app(app)  # 3. привязка расширений к экземпляру
+  ...
+  from flaskblog.new_articles.routes_articles import art_main  # 4. импорт внутри
 
-    app.register_blueprint(art_main)  #    фабрики
+  app.register_blueprint(art_main)  # фабрики
 ```
 
 Что этот паттерн даёт здесь:
@@ -114,9 +114,9 @@ def create_app(config_class=Config, debug_mode=False):
 
 | Блюпринт | Модуль | Ответственность |
 |---|---|---|
-| `art_main` | `flaskblog/new_articles/routesArticles.py` | публикация статей |
-| `main` | `flaskblog/main/routesMain.py` | навигация, `/about`, создание схемы БД |
-| `users` | `flaskblog/users/routesUsers.py` | аутентификация и профиль |
+| `art_main` | `../flaskblog/new_articles/routes_articles.py` | публикация статей |
+| `main` | `../flaskblog/main/routes_main.py` | навигация, `/about`, создание схемы БД |
+| `users` | `../flaskblog/users/routes_users.py` | аутентификация и профиль |
 | `errors` | `flaskblog/errors/handlers.py` | app-wide обработчики HTTP-ошибок |
 
 Нарезка вертикальная: `users/` содержит и маршруты, и формы. Связи между блюпринтами —
@@ -231,7 +231,7 @@ art.content = content  # мутация модуль-level состояния
 
 | Механизм | Где | Что валидирует | Поведение при ошибке |
 |---|---|---|---|
-| WTForms | `flaskblog/users/formsUsers.py` | пользовательский ввод форм: обязательность, длина, формат e-mail, совпадение паролей, уникальность в БД | ошибка в `form.errors`, страница перерисовывается |
+| WTForms | `../flaskblog/users/forms_users.py` | пользовательский ввод форм: обязательность, длина, формат e-mail, совпадение паролей, уникальность в БД | ошибка в `form.errors`, страница перерисовывается |
 | Pydantic | `flaskblog/new_articles/schema_art.py` | форма объектов статей — контент разработчика, не пользователя | `ValidationError` при импорте модуля |
 
 Pydantic здесь не защищает границу системы: он работает с данными, зашитыми в код.

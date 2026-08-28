@@ -28,13 +28,13 @@ def create_app(config_class=Config, debug_mode=False):
     bcrypt.init_app(app)
     login_manager.init_app(app)
 
-    from flaskblog.new_articles.routesArticles import art_main
+    from flaskblog.new_articles.routes_articles import art_main
 
     app.register_blueprint(art_main)
 
     from flaskblog.errors.handlers import errors
-    from flaskblog.main.routesMain import main
-    from flaskblog.users.routesUsers import users
+    from flaskblog.main.routes_main import main
+    from flaskblog.users.routes_users import users
 
     app.register_blueprint(users)
     app.register_blueprint(main)

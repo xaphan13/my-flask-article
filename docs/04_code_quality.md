@@ -103,7 +103,7 @@ DIP — прямая причина нетестируемости (см. §3).
 | Правило | Кол-во | Суть | Комментарий |
 |---|---|---|---|
 | `I001` unsorted-imports | 16 | блоки импортов не отсортированы | во многом следствие обязательного порядка «логгер до всего»; автоисправление сломает эту конвенцию |
-| `N999` invalid-module-name | 4 | `routesMain.py`, `routesArticles.py`, `formsUsers.py`, `routesUsers.py` | camelCase вместо `snake_case` — прямое нарушение PEP 8 |
+| `N999` invalid-module-name | 4 | `routes_main.py`, `routes_articles.py`, `forms_users.py`, `routes_users.py` | camelCase вместо `snake_case` — прямое нарушение PEP 8 |
 | `UP006` non-pep585-annotation | 4 | `List[...]`/`Dict[...]` вместо `list[...]`/`dict[...]` | для Python 3.12 устарело |
 | `UP045` non-pep604-annotation | 4 | `Optional[str]` вместо `str \| None` | там же, в неиспользуемых DTO |
 | `UP035` deprecated-import | 2 | `typing.List`, `typing.Dict` в `schema_art.py:2` | |
@@ -171,7 +171,7 @@ logFC.info("'create_app 5' app.config:\n" + "\n".join(f"    {k} = {app.config[k]
 разработчика он может отличаться — но текущий экземпляр в рабочем дереве неработоспособен.
 
 **B3. `/createDB` выполняет DDL без авторизации, по GET.**
-`flaskblog/main/routesMain.py`. Любой анонимный посетитель вызывает `db.create_all()`.
+`../flaskblog/main/routes_main.py`. Любой анонимный посетитель вызывает `db.create_all()`.
 В текущей схеме прямого разрушения данных нет (`create_all` не удаляет существующие
 таблицы), но это неаутентифицированная точка воздействия на схему и удобный вектор
 для нагрузочного злоупотребления. GET-метод к тому же делает вызов доступным через

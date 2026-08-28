@@ -11,7 +11,7 @@ logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
 from flaskblog import bcrypt, db
 from flaskblog.models import User
-from flaskblog.users.formsUsers import LoginForm, RegistrationForm, UpdateAccountForm
+from flaskblog.users.forms_users import LoginForm, RegistrationForm, UpdateAccountForm
 
 users = Blueprint("users", __name__)
 

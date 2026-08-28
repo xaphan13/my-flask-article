@@ -170,11 +170,11 @@ def _read_cached(path: Path, mtime_ns: int) -> str: ...  # mtime в ключе =
 |---|---|---|---|
 | 1 | `flaskblog/__init__.py` | убрать дамп `app.config` в лог; добавить валидацию обязательных переменных | устраняет B1 — единственный дефект с прямым риском компрометации аккаунтов |
 | 2 | `flaskblog/run.py` | `debug_mode` из окружения, а не литералом; убрать `import gunicorn` (L-уровень) | устраняет B4, возвращает работоспособность `errors/500.html` |
-| 3 | `flaskblog/main/routesMain.py` | `/createDB` — под `@login_required` + `methods=['POST']`, либо удалить в пользу CLI-команды; убрать неиспользуемые `post_id`/`page`; убрать 5 демо-`flash` | устраняет B3 и L9-L10; предпочтительный путь — заменить маршрут на `flask db upgrade` (§4.2), тогда обработчик исчезает целиком |
-| 4 | `flaskblog/users/routesUsers.py` | валидация `next` (H1); `logout` на POST (H2); `try/except IntegrityError` + `rollback` (H4); `Image.verify()` и `with` для Pillow (H6, M9); удаление старого аватара (M6) | самый насыщенный дефектами модуль: 6 пунктов из H/M |
+| 3 | `../flaskblog/main/routes_main.py` | `/createDB` — под `@login_required` + `methods=['POST']`, либо удалить в пользу CLI-команды; убрать неиспользуемые `post_id`/`page`; убрать 5 демо-`flash` | устраняет B3 и L9-L10; предпочтительный путь — заменить маршрут на `flask db upgrade` (§4.2), тогда обработчик исчезает целиком |
+| 4 | `../flaskblog/users/routes_users.py` | валидация `next` (H1); `logout` на POST (H2); `try/except IntegrityError` + `rollback` (H4); `Image.verify()` и `with` для Pillow (H6, M9); удаление старого аватара (M6) | самый насыщенный дефектами модуль: 6 пунктов из H/M |
 | 5 | `flaskblog/new_articles/schema_art.py` | разделить на три части: `models.py` (только `ArticleLang`), `repository.py` (§2.2), удалить мёртвое (L3, L4) | модуль вдвое больше работающей части, смешивает три роли |
-| 6 | `flaskblog/new_articles/routesArticles.py` | `get_article` + `abort(404)` (M1); прекратить мутацию общего объекта (M3); `model_dump()` вместо `.dict()` (L7) | 28 строк, а содержит два поведенческих дефекта |
-| 7 | `flaskblog/users/formsUsers.py` | `Length(min=8, max=72)` для пароля (H7); общий миксин для валидаторов уникальности (DRY §2.3) | |
+| 6 | `../flaskblog/new_articles/routes_articles.py` | `get_article` + `abort(404)` (M1); прекратить мутацию общего объекта (M3); `model_dump()` вместо `.dict()` (L7) | 28 строк, а содержит два поведенческих дефекта |
+| 7 | `../flaskblog/users/forms_users.py` | `Length(min=8, max=72)` для пароля (H7); общий миксин для валидаторов уникальности (DRY §2.3) | |
 | 8 | `flaskblog/models.py` | убрать переопределённый `__init__`; `datetime.now(UTC)` вместо `utcnow`; `db.session.get()` вместо `User.query.get()` (L7) | подготовка к миграциям — правки схемы дешевле делать до появления данных |
 | 9 | `flaskblog/logger/config_log.py` | `logging_config` вынести в отдельный модуль; заменить `multipledispatch` на дефолтный аргумент; уровень из `LOG_LEVEL` | снимает `F811`, убирает зависимость, упрощает §3.5 |
 

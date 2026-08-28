@@ -17,7 +17,7 @@
 
 ## Что сделать
 
-- В `flaskblog/new_articles/routesArticles.py` обработать отсутствие `art_id` в
+- В `flaskblog/new_articles/routes_articles.py` обработать отсутствие `art_id` в
   `art_dict_file`: вместо падения с `KeyError` — `abort(404)`.
 - Не менять поведение существующих маршрутов; `/art/<author>/<art_id>` для валидного
   `art_id` работает как раньше.
