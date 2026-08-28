@@ -1,4 +1,5 @@
 from flaskblog.logger.config_log import ConfigLogger
+
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
 
@@ -31,4 +32,3 @@ class ArticleLang22:
     def get_article(self):
         logFC.info(f"ArticleEx article = {self.article}")
         return self.article
-

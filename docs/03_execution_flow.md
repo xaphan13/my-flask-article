@@ -165,9 +165,9 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 ```python
 @art_main.route("/art_home")
 def art_home():
-    title_list = [x.dict(exclude_unset=True, exclude={'content'}) for x in art_dict_file.values()]
+    title_list = [x.dict(exclude_unset=True, exclude={"content"}) for x in art_dict_file.values()]
     logFC.info(f"new_art : '/art' = {title_list}")
-    return render_template('new_art/art_home.html', title_list=title_list)
+    return render_template("new_art/art_home.html", title_list=title_list)
 ```
 
 1. Итерация по `art_dict_file` — словарю, собранному при импорте `schema_art`.
@@ -192,7 +192,7 @@ def art_author(author, art_id):
     art: ArticleLang = art_dict_file[art_id]
     content: str = render_article(art.file_name)
     art.content = content
-    return render_template('new_art/art_author.html', lang=art.lang, art=art)
+    return render_template("new_art/art_author.html", lang=art.lang, art=art)
 ```
 
 1. **`author` игнорируется** — используется только в логе. Поиск идёт исключительно по
@@ -264,9 +264,9 @@ CSRF-защиты**, то есть сторонний сайт может раз
 ```python
 def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)   # расширение от КЛИЕНТА
+    _, f_ext = os.path.splitext(form_picture.filename)  # расширение от КЛИЕНТА
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
+    picture_path = os.path.join(current_app.root_path, "static/profile_pics", picture_fn)
     output_size = (125, 125)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
@@ -295,11 +295,11 @@ def save_picture(form_picture):
 @main.route("/createDB/")
 @main.route("/createDB/<int:post_id>")
 def createDB(post_id=999):
-    page = request.args.get('id', 0, type=int)
+    page = request.args.get("id", 0, type=int)
     db.create_all()
     db.session.commit()
     logFC.info(f"'createDB' = {post_id} = {page}")
-    return render_template('about.html', title='About')
+    return render_template("about.html", title="About")
 ```
 
 Обработчик носит следы отладочного эксперимента и заслуживает отдельного внимания:
@@ -374,7 +374,8 @@ WSGI-сервера. Раскрытия исходников в ответе н�
 ```python
 from flask import render_template, Blueprint
 from flaskblog.logger.config_log import ConfigLogger
-logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")   # логгер ДО прочих импортов
+
+logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")  # логгер ДО прочих импортов
 from flaskblog import db
 ```
 

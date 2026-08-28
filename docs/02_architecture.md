@@ -83,18 +83,20 @@
 Канонический для Flask паттерн, реализован корректно. `flaskblog/__init__.py`:
 
 ```python
-db = SQLAlchemy()          # 1. синглтоны создаются на уровне модуля, без app
+db = SQLAlchemy()  # 1. синглтоны создаются на уровне модуля, без app
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 
+
 def create_app(config_class=Config, debug_mode=False):
     app = Flask(__name__)
-    app.config.from_object(config_class)   # 2. конфиг из класса
-    app.config['DEBUG'] = debug_mode
-    db.init_app(app)                       # 3. привязка расширений к экземпляру
+    app.config.from_object(config_class)  # 2. конфиг из класса
+    app.config["DEBUG"] = debug_mode
+    db.init_app(app)  # 3. привязка расширений к экземпляру
     ...
-    from flaskblog.new_articles.routesArticles import art_main   # 4. импорт внутри
-    app.register_blueprint(art_main)                             #    фабрики
+    from flaskblog.new_articles.routesArticles import art_main  # 4. импорт внутри
+
+    app.register_blueprint(art_main)  #    фабрики
 ```
 
 Что этот паттерн даёт здесь:
@@ -131,8 +133,9 @@ def create_app(config_class=Config, debug_mode=False):
 **в момент импорта**:
 
 ```python
-env_path: Path = Path(__file__).resolve().parent.parent / 'local.env'
+env_path: Path = Path(__file__).resolve().parent.parent / "local.env"
 load_dotenv(env_path)
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -158,7 +161,7 @@ class Config:
 
 ```python
 class ConfigLogger:
-    isSetting = False           # защита от повторной настройки
+    isSetting = False  # защита от повторной настройки
 
     @staticmethod
     def settingLogger():
@@ -168,7 +171,7 @@ class ConfigLogger:
             ConfigLogger.isSetting = True
 
     @staticmethod
-    @dispatch(str, str)         # multipledispatch: перегрузка по числу аргументов
+    @dispatch(str, str)  # multipledispatch: перегрузка по числу аргументов
     def getLogger(nameBase, nameMod):
         if not ConfigLogger.isSetting:
             ConfigLogger.settingLogger()
@@ -188,6 +191,7 @@ articles_data = yaml.safe_load(articles_path.read_text(encoding="utf8"))
 art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
 art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
 
+
 def read_html(name_html: str, name_dir: str = get_path_dir()) -> str: ...
 def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 ```
@@ -201,8 +205,8 @@ def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 **Опасное место.** Обработчик мутирует общий объект:
 
 ```python
-art: ArticleLang = art_dict_file[art_id]   # общий для всех запросов инстанс
-art.content = content                      # мутация модуль-level состояния
+art: ArticleLang = art_dict_file[art_id]  # общий для всех запросов инстанс
+art.content = content  # мутация модуль-level состояния
 ```
 
 Сейчас это безвредно, так как значение перезаписывается на каждом запросе одним и тем же

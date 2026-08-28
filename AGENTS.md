@@ -178,7 +178,8 @@ python -m flaskblog.run                                                         
 ```python
 from flask import render_template, Blueprint
 from flaskblog.logger.config_log import ConfigLogger
-logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")   # исключение по порядку импортов (E402)
+
+logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")  # исключение по порядку импортов (E402)
 from flaskblog import db
 ```
 

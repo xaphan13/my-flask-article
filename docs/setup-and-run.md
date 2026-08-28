@@ -77,7 +77,7 @@ pip install -r reqs_all.txt      # полный пин-лист
 `flaskblog/config.py:5-6` читает env-файл по пути `<корень проекта>/local.env`:
 
 ```python
-env_path: Path = Path(__file__).resolve().parent.parent / 'local.env'
+env_path: Path = Path(__file__).resolve().parent.parent / "local.env"
 load_dotenv(env_path)
 ```
 

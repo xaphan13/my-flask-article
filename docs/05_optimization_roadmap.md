@@ -41,7 +41,7 @@
 
 ```python
 def list_articles() -> list[ArticleMeta]: ...
-def get_article(art_id: int) -> Article | None: ...   # None вместо KeyError
+def get_article(art_id: int) -> Article | None: ...  # None вместо KeyError
 ```
 
 Что это даёт сразу: исчезает M1 (обработчик получает `None` и вызывает `abort(404)`),
@@ -124,7 +124,7 @@ Flask с ASGI-адаптером не сделает синхронные `psyco
 
 ```python
 @lru_cache(maxsize=64)
-def _read_cached(path: Path, mtime_ns: int) -> str: ...   # mtime в ключе = авто-инвалидация
+def _read_cached(path: Path, mtime_ns: int) -> str: ...  # mtime в ключе = авто-инвалидация
 ```
 
 Это убирает дисковый ввод-вывод из горячего пути. Одновременно снизить логирование
@@ -233,7 +233,7 @@ tests/test_auth.py       регистрация → вход → доступ к
 Первый же smoke-тест закрепляет уже проверенные факты и не даст им регрессировать:
 
 ```python
-def test_unknown_article_returns_404(client):     # сейчас упадёт: возвращается 500 (M1)
+def test_unknown_article_returns_404(client):  # сейчас упадёт: возвращается 500 (M1)
     assert client.get("/art/Max/999").status_code == 404
 ```
 
