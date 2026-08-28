@@ -1,30 +1,26 @@
 articles:
-  - author: Max
-    lang: Python
-    art_id: 1
-    title: Генераторы и декораторы
-    file_name: art1.html
-
-  - author: Alex
-    lang: Rust
-    art_id: 2
-    title: Кортежи и массивы
-    file_name: art2.html
-
-  - author: Max
-    lang: Python
-    art_id: 3
-    title: Логирование в многопроцессном приложении
-    file_name: art3.html
-
-  - author: Max
-    lang: Python
-    art_id: 4
-    title: Глубокое погружение в метаклассы
-    file_name: art4.html
-
-  - author: Max
-    lang: Python
-    art_id: 5
-    title: Репозиторий для Telegram-магазина-
-    file_name: gemini-pro-fastapi-1.md
+- author: Max
+  lang: Python
+  art_id: 1787932544
+  title: FastAPI_CodeReview.docx
+  file_name: FastAPI_CodeReview.docx.md
+- author: Max
+  lang: Python
+  art_id: 1787932545
+  title: Тестовая статья codex
+  file_name: codex-onefast-review.md
+- author: Max
+  lang: Python
+  art_id: 1787932546
+  title: gemPro-book1-g
+  file_name: gemPro-book1-g.md
+- author: aaa
+  lang: AI
+  art_id: 1787935183
+  title: agent_mode_review
+  file_name: agent_mode_review.md
+- author: aaa
+  lang: AI
+  art_id: 1787935323
+  title: gemini-pro-fastapi-1
+  file_name: gemini-pro-fastapi-1.md
