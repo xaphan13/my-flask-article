@@ -31,12 +31,6 @@ class ConfigLogger:
             ConfigLogger.isSetting = True
 
     @staticmethod
-    @dispatch(str)
-    def getLogger(nameMod):
-        """получение базового логгера"""
-        return logging.getLogger(ConfigLogger.baseNameLogger + "." + nameMod)
-
-    @staticmethod
     @dispatch(str, str)
     def getLogger(nameBase, nameMod):
         """nameBase берётся из словаря = 'loggers'
