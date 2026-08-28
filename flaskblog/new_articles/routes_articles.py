@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, abort, render_template
 
 from flaskblog.logger.config_log import ConfigLogger
 
@@ -21,6 +21,9 @@ def art_home():
 @art_main.route("/art/<string:author>/<int:art_id>")
 def art_author(author, art_id):
     logFC.info(f"art_author : '/art/<string:username>' = {author} - {art_id}")
+
+    if art_id not in art_dict_file:
+        abort(404)
 
     art: ArticleLang = art_dict_file[art_id]
     content: str = render_article(art.file_name)
