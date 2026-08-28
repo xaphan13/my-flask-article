@@ -9,8 +9,6 @@ import yaml
 from flaskblog.logger.config_log import ConfigLogger
 logFC = ConfigLogger.getLogger("FileStdout", "ClientHTTPS")
 
-from flaskblog.new_articles.arts_content import art1, art2, art3
-
 
 # ==============================================================================
 # ++++++++++++++++++ BaseModel - ArticleLang - pydantic ++++++++++++++++++++++++
@@ -59,16 +57,6 @@ with articles_path.open("r", encoding="utf8") as articles_file:
 
 art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
 art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
-
-
-# ----------------------------- old version
-articles: List[ArticleLang] = [
-    ArticleLang(author="Max",  lang="Python", art_id=1, title="Генераторы и декораторы", content=art1),
-    ArticleLang(author="Alex", lang="Rust",   art_id=2, title="Кортежи и массивы", content=art2),
-    ArticleLang(author="Max",  lang="Python", art_id=3, title="Логирование в много процессном приложении", content=art3)
-]
-
-articles_dict = {article.art_id: article for article in articles}
 
 
 # ==============================================================================
