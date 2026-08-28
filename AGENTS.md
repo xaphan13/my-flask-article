@@ -3,7 +3,8 @@
 Контекст-инструкция для AI-агентов, работающих с кодом в этом репозитории, плюс правила
 команды агентов (раздел «Агентный режим» в конце файла). `QWEN.md` содержит тот же
 проектный контекст и инструкции оркестратора для главной сессии Qwen Code — проектные
-части обоих файлов держите синхронными. Текущее задание команды — [REQUIREMENTS.md](REQUIREMENTS.md).
+части обоих файлов держите синхронными. Текущее задание команды —
+[tasks/current/REQUIREMENTS.md](tasks/current/REQUIREMENTS.md).
 
 ## Обзор проекта
 
@@ -43,7 +44,7 @@
 
 | Бьюпринт | Модуль | Маршруты |
 |---|---|---|
-| `art_main` | `new_articles/routesArticles.py` | `/art_home`, `/art/<author>/<art_id>` |
+| `art_main` | `new_articles/routes_articles.py` | `/art_home`, `/art/<author>/<art_id>` |
 | `main` | `main/routesMain.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
 | `users` | `users/routesUsers.py` | `/register`, `/login`, `/logout`, `/account` |
 | `errors` | `errors/handlers.py` | обработчики 403 / 404 / 500 на уровне приложения |
@@ -56,6 +57,7 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
 ├── compose-nginx-db.yml        app_flask + nginx + db + pgadmin
 ├── docker_manager.sh           хелперы net-create | cont-stop
 ├── git_manager.sh              хелперы br | st | brst | commit
+├── tasks/                      задания команды: current/ — живое, NNN-<slug>/ — архив с отчётами (ведёт оркестратор)
 ├── docs/setup-and-run.md       подробный отчёт по настройке (рус.) — читать первым
 ├── nginx/                      Docker-nginx, nginx.conf, cert/ (сертификатов нет в git)
 └── flaskblog/                  пакет приложения
@@ -253,8 +255,9 @@ from flaskblog import db
 
 - **`author` в `/art/<author>/<art_id>` декоративен.** `art_author` ищет статью только по
   `art_id`, поэтому любая строка автора вернёт одну и ту же статью.
-- **Неизвестный `art_id` бросает `KeyError`** из `art_dict_file[art_id]`, что выливается в
-  500, а не в 404.
+- **Неизвестный `art_id` возвращает 404.** `art_author` вызывает `abort(404)`, если
+  `art_id` отсутствует в `art_dict_file` (до задания 001 было 500 с `KeyError`;
+  см. `tasks/001-404-missing-article/REQUIREMENTS.md`).
 - **`art.content = content` изменяет объект `ArticleLang` уровня модуля**, общий для всех
   запросов. Содержимое перечитывается с диска на каждом запросе, поэтому сейчас это
   безвредно — но не добавляйте в эти объекты состояние, рассчитывая на изоляцию по запросам.
@@ -301,18 +304,33 @@ from flaskblog import db
 ## Агентный режим
 
 Эти правила применяются к каждому агенту команды, работающему над заданием из
-[REQUIREMENTS.md](REQUIREMENTS.md). Оркестратор — главная сессия Qwen Code (инструкции
-в `QWEN.md`). При сомнениях главенствует REQUIREMENTS.md, затем проектные соглашения
+[tasks/current/REQUIREMENTS.md](tasks/current/REQUIREMENTS.md). Оркестратор — главная сессия Qwen Code (инструкции
+в `QWEN.md`). При сомнениях главенствует текущее задание, затем проектные соглашения
 выше.
 
 ### Жизненный цикл заданий
 
-- В `REQUIREMENTS.md` всегда лежит одно текущее задание по проекту.
-- Когда все его критерии успеха подтверждены — задание закрыто; пользователь заменяет
-  содержимое `REQUIREMENTS.md` на новое, и цикл повторяется тем же составом команды.
+- Текущее задание живёт в `tasks/current/REQUIREMENTS.md`; в корне проекта файлов
+  заданий нет. Все рабочие артефакты живого задания создаются в той же папке
+  `tasks/current/`: `DEFECTS.md` (если qa найдёт дефекты), `ADVERSARIAL_REVIEW.md`,
+  `e2e/`, `screenshots/`.
+- Когда все критерии успеха подтверждены, оркестратор архивирует задание:
+  переименовывает папку `tasks/current/` в `tasks/NNN-<slug>/` (`NNN` — следующий
+  порядковый номер от 001, `<slug>` — короткое латинское имя через дефис) — так все
+  артефакты переезжают в архив вместе с заданием; в `tasks/NNN-<slug>/REQUIREMENTS.md`
+  убирает пометку «Текущее задание» и дописывает в конец секцию «Отчёт о выполнении»:
+  дата закрытия, итог, изменения, таблица критериев с результатами и ссылками на
+  доказательства, дефекты, disposition находок adversary, участники. Шаблон отчёта —
+  в QWEN.md. Затем создаёт свежую заглушку `tasks/current/REQUIREMENTS.md`
+  «Задания нет», в которую пользователь кладёт новое задание, и цикл повторяется
+  тем же составом команды.
+- Закрытые задания лежат в `tasks/NNN-<slug>/` — целиком, со всеми артефактами
+  (задание + отчёт, ADVERSARIAL_REVIEW.md, DEFECTS.md, e2e/, screenshots/); пишет
+  туда только оркестратор.
 - Комплект агентного режима переносим: чтобы использовать его в другом проекте,
   достаточно адаптировать проектный контекст в `README.md`, `QWEN.md`, `AGENTS.md`
-  и папку `.qwen/`; `REQUIREMENTS.md` каждый раз получает новое задание.
+  и папку `.qwen/`; `tasks/current/REQUIREMENTS.md` каждый раз получает новое
+  задание, архив `tasks/` начинается пустым.
 
 ### Команда
 
@@ -333,13 +351,14 @@ from flaskblog import db
 
 | Агент | Зона (можно редактировать) | Чем проверяет изменения | Особые запреты |
 |---|---|---|---|
-| frontend-dev | `flaskblog/templates/`, `flaskblog/static/` | запуск из корня: `python -m flaskblog.run`; просмотр изменённых страниц; скриншот в `screenshots/` | Python-модули и `articles.yaml` — зона backend-dev |
+| frontend-dev | `flaskblog/templates/`, `flaskblog/static/` | запуск из корня: `python -m flaskblog.run`; просмотр изменённых страниц; скриншот в `tasks/current/screenshots/` | Python-модули и `articles.yaml` — зона backend-dev |
 | backend-dev | Python-модули `flaskblog/`, `flaskblog/new_articles/articles.yaml` | `uv run ruff check .`; `python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"` (ожидается 13); curl изменённых маршрутов | `templates/`, `static/`; устаревшие API из раздела выше |
-| qa | `e2e/`, `DEFECTS.md`, `screenshots/` | curl-сценарии из критериев успеха REQUIREMENTS.md; регресс: `/`, `/art_home`, `/art/<author>/<art_id>`, `/about` | любой код продукта |
-| adversary | `ADVERSARIAL_REVIEW.md`, `screenshots/` | curl по запущенному приложению; логи приложения | всё, кроме своих файлов |
+| qa | `tasks/current/e2e/`, `tasks/current/DEFECTS.md`, `tasks/current/screenshots/` | curl-сценарии из критериев успеха текущего задания; регресс: `/`, `/art_home`, `/art/<author>/<art_id>`, `/about` | любой код продукта |
+| adversary | `tasks/current/ADVERSARIAL_REVIEW.md`, `tasks/current/screenshots/` | curl по запущенному приложению; логи приложения | всё, кроме своих файлов |
 
-Общее для всех: не редактировать `.qwen/`, `REQUIREMENTS.md`, `AGENTS.md`, `QWEN.md`,
-`README.md`; не добавлять зависимости и тестовые фреймворки без решения оркестратора.
+Общее для всех: не редактировать `.qwen/`, `tasks/current/REQUIREMENTS.md`, папки
+архивных заданий `tasks/NNN-*`, `AGENTS.md`, `QWEN.md`, `README.md`; не добавлять
+зависимости и тестовые фреймворки без решения оркестратора.
 
 Границы ролей обеспечиваются системным промптом каждого агента и конфигурацией
 инструментов. Не обходите их командами оболочки: если инструкции говорят, что файл
@@ -347,11 +366,15 @@ from flaskblog import db
 
 ### Соглашения репозитория агентного режима
 
-- Проверочные сценарии и доказательства qa живут в `e2e/` (скрипты, заметки прогонов).
-  Писать туда может только qa.
-- Скриншоты лежат в `screenshots/`.
-- `DEFECTS.md` ведут qa и оркестратор (см. ниже); `ADVERSARIAL_REVIEW.md` — adversary
-  и оркестратор.
+- Всё о задании живёт в его папке. Текущее задание — `tasks/current/` (контракт
+  `REQUIREMENTS.md` + рабочие артефакты `DEFECTS.md`, `ADVERSARIAL_REVIEW.md`,
+  `e2e/`, `screenshots/`); закрытое — `tasks/NNN-<slug>/` с тем же набором плюс
+  отчёт. В корне проекта файлов заданий нет.
+- Проверочные сценарии и доказательства qa живут в `tasks/current/e2e/` (скрипты,
+  заметки прогонов). Писать туда может только qa.
+- Скриншоты лежат в `tasks/current/screenshots/`.
+- `tasks/current/DEFECTS.md` ведут qa и оркестратор (см. ниже);
+  `tasks/current/ADVERSARIAL_REVIEW.md` — adversary и оркестратор.
 - Никаких эмодзи в коде, комментариях и логах.
 - Новых тяжёлых зависимостей (фреймворки тестов, браузерные драйверы и т.п.) не
   добавлять без явного решения оркестратора, согласованного с пользователем: проект
@@ -365,11 +388,12 @@ from flaskblog import db
 длинный прогон дорожает с каждым ходом, а упавший на 50+ ходу — миллионы токенов
 впустую. Общие правила для всех субагентов:
 
-- AGENTS.md и REQUIREMENTS.md читать один раз в начале прогона, не перечитывать.
+- AGENTS.md и `tasks/current/REQUIREMENTS.md` читать один раз в начале прогона,
+  не перечитывать.
 - Не читать исходники продукта целиком: разработчик смотрит только свою зону правок,
   qa проверяет поведение, а не код.
 - Объединять команды проверки в пачки (один shell-вызов — несколько curl/команд),
-  сырые выводы сразу писать в файл (`e2e/`), а не пересказывать в чате.
+  сырые выводы сразу писать в файл (`tasks/current/e2e/`), а не пересказывать в чате.
 - Ошибку читать и исправлять, а не повторять ту же команду вслепую.
 
 Как правильно запускать тестера (qa) — см. раздел «Экономия токенов» в
@@ -380,7 +404,9 @@ playwright-скриптом с `NODE_PATH=$(npm root -g)`. Оркестрато�
 
 ### DEFECTS.md — реестр дефектов
 
-Все дефекты живут в `DEFECTS.md` в корне проекта, одна запись на дефект, новые сверху.
+Все дефекты живут в `tasks/current/DEFECTS.md` (папка текущего задания; создаётся при
+первом дефекте), одна запись на дефект, новые сверху. При архивировании задания файл
+переезжает в `tasks/NNN-<slug>/` вместе с папкой.
 Авторы: **qa** (создание, закрытие, переоткрытие) и **оркестратор** (фиксация ответов
 разработчиков, отклонение). Больше никто никогда его не редактирует.
 
@@ -391,14 +417,14 @@ playwright-скриптом с `NODE_PATH=$(npm root -g)`. Оркестрато�
     - Status: OPEN
     - Severity: HIGH | MEDIUM | LOW
     - Found by: qa | adversary (ADV-003)
-    - Task: <название текущего задания из REQUIREMENTS.md>
+    - Task: <название текущего задания из tasks/current/REQUIREMENTS.md>
 
     Steps to reproduce:
     1. Пронумерованные, конкретные, начиная с запуска приложения.
 
     Expected: Что должно произойти.
     Actual: Что происходит вместо этого.
-    Screenshot: screenshots/def-001.png (опционально)
+    Screenshot: tasks/current/screenshots/def-001.png (опционально)
 
     History:
     - qa: opened
@@ -418,7 +444,9 @@ playwright-скриптом с `NODE_PATH=$(npm root -g)`. Оркестрато�
 
 ### ADVERSARIAL_REVIEW.md — находки adversary
 
-Все находки adversary живут в `ADVERSARIAL_REVIEW.md` в корне проекта.
+Все находки adversary живут в `tasks/current/ADVERSARIAL_REVIEW.md` (папка текущего
+задания; создаётся при первом прогоне; при архивировании переезжает в
+`tasks/NNN-<slug>/` вместе с папкой).
 Авторы: **adversary** (создание записей) и **оркестратор** (заполнение Disposition). Больше
 никто.
 
@@ -432,7 +460,7 @@ playwright-скриптом с `NODE_PATH=$(npm root -g)`. Оркестрато�
     What I did: ...
     Expected: ...
     Actual: ...
-    Screenshot: screenshots/adv-001.png (опционально)
+    Screenshot: tasks/current/screenshots/adv-001.png (опционально)
 
     Disposition: PENDING
 
