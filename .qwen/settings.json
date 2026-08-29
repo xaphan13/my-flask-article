@@ -11,7 +11,13 @@
       "Bash(set *)",
       "Bash(done)",
       "Bash(diff *)",
-      "Bash(sed *)"
+      "Bash(sed *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(node *)",
+      "Bash(rm *)"
     ]
   },
   "$version": 4

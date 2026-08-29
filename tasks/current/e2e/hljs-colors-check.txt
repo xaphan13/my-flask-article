@@ -1,0 +1,30 @@
+{
+  "dark": {
+    "num_blocks": 12,
+    "first_color": "rgb(220, 220, 220)",
+    "first_bg": "rgb(30, 30, 30)",
+    "target_block_index": 4,
+    "kw_color": "rgb(86, 156, 214)",
+    "str_color": "rgb(214, 157, 133)",
+    "com_color": null,
+    "inline_count": 31,
+    "inline_color": "rgb(30, 255, 30)",
+    "inline_bg": "rgb(46, 46, 46)",
+    "inline_text_sample": "requirements.txt",
+    "body_bg": "rgb(30, 30, 30)"
+  },
+  "light": {
+    "num_blocks": 12,
+    "first_color": "rgb(0, 0, 0)",
+    "first_bg": "rgb(255, 255, 255)",
+    "target_block_index": 4,
+    "kw_color": "rgb(0, 0, 255)",
+    "str_color": "rgb(163, 21, 21)",
+    "com_color": null,
+    "inline_count": 31,
+    "inline_color": "rgb(214, 51, 132)",
+    "inline_bg": "rgb(241, 243, 245)",
+    "inline_text_sample": "requirements.txt",
+    "body_bg": "rgb(250, 250, 250)"
+  }
+}

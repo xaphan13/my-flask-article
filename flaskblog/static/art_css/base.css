@@ -1,149 +1,326 @@
+/* Единый файл стилей на CSS-переменных для обеих тем.
+   Bootstrap 5.3 даёт нативный data-bs-theme, мы переопределяем палитру
+   своими переменными. Тёмная тема по умолчанию; её цвета перенесены из
+   прежнего dark-theme.css, чтобы сайт остался узнаваемо прежним.
+   Светлая тема — аккуратная и контрастная, на тех же переменных. */
+
+/* === Базовая типографика и отступы ========================================= */
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.8;
     margin: 0;
     transition: background-color 0.3s, color 0.3s;
-}
-
-h1 {
-    text-align: center;
-    font-size: 1.6em;
-    position: relative;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-h2 {
-    border-bottom: 1px solid;
-    padding-bottom: 5px;
-    margin-top: 10px;
-    font-size: 1.4em;
-    position: relative;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-h2::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 0.3s;
-}
-
-h2:hover::after {
-    transform: scaleX(1);
-}
-
-h3 {
-    margin-top: 30px;
-    font-size: 1.2em;
-    position: relative;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-h3::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 0.5s;
-}
-
-h3:hover::after {
-    transform: scaleX(1);
+    padding-top: 70px; /* компенсируем фиксированный navbar */
 }
 
 p {
-    margin-bottom: 15px;
-    font-size: 1.1em;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
 }
 
-ol {
-    margin-left: 20px;
-    font-size: 1.1em;
+ol, ul {
+    font-size: 1.05rem;
 }
 
-
-
-/* Правое меню */
-.margin-right-sidebar {
-    margin-right: -20px;
+a {
+    color: var(--art-link);
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
 }
 
-.sidebar {
-    position: sticky;
-    top: 20px;
-    height: fit-content;
-    font-size: 1.3em;
-}
-  
-.sidebar ul {
-    list-style-type: none;
-}
-  
-.sidebar ul li {
-    margin-bottom: 10px;
-}
-  
-
-
-/* Контент и подвал */
-.info_art {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.8;
-    font-size: 1.0em;
-    text-align: right;
-    transition: background-color 0.3s, color 0.3s;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+a:hover {
+    color: var(--art-link-hover);
+    text-decoration: underline;
 }
 
-.art_container {
-    padding: 0px;
+/* === Заголовки ============================================================= */
+
+h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    position: relative;
+    color: var(--art-h1);
 }
 
-.padding-content {
-    padding-top: 70px;
+h2 {
+    border-bottom: 1px solid var(--art-h2-border);
+    padding-bottom: 0.5rem;
+    margin-top: 1rem;
+    font-size: 1.4rem;
+    color: var(--art-h2);
 }
+
+h3 {
+    margin-top: 1.75rem;
+    font-size: 1.2rem;
+    color: var(--art-h3);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--art-heading);
+}
+
+/* === Шапка ================================================================= */
+
+.backcolor-header {
+    background-color: var(--art-header-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.site-header .navbar-nav .nav-link {
+    color: var(--art-header-link);
+    transition: color 0.15s ease-in-out;
+}
+
+.site-header .navbar-nav .nav-link:hover,
+.site-header .navbar-nav .nav-link:focus-visible {
+    color: var(--art-header-link-hover);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+/* === Футер ================================================================= */
 
 .custom_footer {
-    margin-top: 20px;
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+    background-color: var(--art-footer-bg);
+    color: var(--art-footer-color);
+    border-top: 1px solid var(--art-border);
 }
 
+/* === Контент и статьи ====================================================== */
 
+.content-section {
+    background-color: var(--art-card-bg);
+    border: 1px solid var(--art-border);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
 
-/* Подсветка кода */
+.info_art {
+    font-size: 0.95rem;
+    color: var(--art-text-muted);
+}
+
+.art-title {
+    color: var(--art-h1);
+    margin-bottom: 0.5rem;
+}
+
+.art-body {
+    color: var(--art-body-color);
+}
+
+.art-body p,
+.art-body li,
+.art-body pre,
+.art-body blockquote,
+.art-body table {
+    color: var(--art-body-color);
+}
+
+/* === Карточки статей (art_home) ============================================ */
+
+.art-card {
+    background-color: var(--art-card-bg);
+    border: 1px solid var(--art-border);
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    color: var(--art-body-color);
+}
+
+.art-card:hover,
+.art-card:focus-visible {
+    border-color: var(--art-link);
+    box-shadow: 0 0 0 0.2rem var(--art-focus-ring);
+    text-decoration: none;
+    color: var(--art-body-color);
+}
+
+.art-card__title {
+    color: var(--art-link);
+    font-weight: 600;
+}
+
+.art-card__title:hover {
+    color: var(--art-link-hover);
+}
+
+/* === Подсветка кода (hljs) ================================================= */
+
 .highlight {
     font-weight: bold;
 }
 
+/* Селектор тёмной темы hljs в navbar: вертикальное центрирование,
+   компактный размер, читаемость в обеих темах сайта. */
+.hljs-theme-select-item .hljs-theme-select {
+    min-width: 9rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    margin: 0;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.hljs-theme-select-item .hljs-theme-select:focus-visible {
+    outline: 2px solid var(--art-link);
+    outline-offset: 1px;
+}
+
 .hljs {
-    font-family: 'Courier New', Courier;
-    font-size: 1.2em;
-    padding: 5px 0px 5px 10px !important; /* Устанавливаем желаемый отступ */
-    margin: 0px 0px 0px 0px !important; /* Убираем внешние отступы */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.05rem;
+    padding: 0.5rem 0 0.5rem 1rem !important;
+    margin: 0 !important;
+    border-radius: 0.375rem;
 }
 
 pre {
     overflow-x: auto;
     transition: background-color 0.3s;
+    border-radius: 0.375rem;
 }
 
-code {
-    padding: 0px 0px 0px 0px;
-    border-radius: 3px;
+:not(pre) > code {
+    border-radius: 0.25rem;
     font-family: 'Courier New', Courier, monospace;
     transition: background-color 0.3s, color 0.3s;
+    color: var(--art-code-color);
+    background-color: var(--art-code-bg);
+    padding: 0 0.25rem;
 }
 
 pre code {
     display: block;
     white-space: pre;
     overflow-x: auto;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+/* === Аватар в account.html ================================================= */
+
+.account-img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border: 2px solid var(--art-border);
+}
+
+/* === Тёмная тема (по умолчанию) ============================================ */
+
+[data-bs-theme="dark"] {
+    --bs-body-bg: #1e1e1e;
+    --bs-body-color: #e0e0e0;
+    --bs-border-color: #3a3a3a;
+    --bs-secondary-color: #b0b0b0;
+    --bs-link-color: #61dafb;
+    --bs-link-hover-color: #9b59b6;
+
+    --art-link: #61dafb;
+    --art-link-hover: #9b59b6;
+    --art-heading: #e0e0e0;
+    --art-h1: #ff6f61;
+    --art-h2: #61dafb;
+    --art-h2-border: #61dafb;
+    --art-h3: #9b59b6;
+    --art-body-color: #e0e0e0;
+    --art-text-muted: #a0a0a0;
+    --art-card-bg: #2a2a2a;
+    --art-border: #3a3a3a;
+    --art-header-bg: #354754;
+    --art-header-link: #cbd5db;
+    --art-header-link-hover: #ffffff;
+    --art-footer-bg: #2e2e2e;
+    --art-footer-color: #b0b0b0;
+    --art-code-bg: #2e2e2e;
+    --art-code-color: #1eff1e;
+    --art-focus-ring: rgba(97, 218, 251, 0.25);
+    --art-h2-rule: #61dafb;
+}
+
+/* === Светлая тема ========================================================== */
+
+[data-bs-theme="light"] {
+    --bs-body-bg: #fafafa;
+    --bs-body-color: #212529;
+    --bs-border-color: #dee2e6;
+    --bs-secondary-color: #6c757d;
+    --bs-link-color: #0d6efd;
+    --bs-link-hover-color: #0a58ca;
+
+    --art-link: #0d6efd;
+    --art-link-hover: #0a58ca;
+    --art-heading: #212529;
+    --art-h1: #d63384;
+    --art-h2: #0d6efd;
+    --art-h2-border: #0d6efd;
+    --art-h3: #6f42c1;
+    --art-body-color: #212529;
+    --art-text-muted: #6c757d;
+    --art-card-bg: #ffffff;
+    --art-border: #dee2e6;
+    --art-header-bg: #354754;
+    --art-header-link: #e9ecef;
+    --art-header-link-hover: #ffffff;
+    --art-footer-bg: #f1f3f5;
+    --art-footer-color: #495057;
+    --art-code-bg: #f1f3f5;
+    --art-code-color: #d63384;
+    --art-focus-ring: rgba(13, 110, 253, 0.25);
+    --art-h2-rule: #0d6efd;
+}
+
+/* === Контейнер для фиксированного navbar ================================== */
+
+main {
+    padding-bottom: 1rem;
+}
+
+/* Отступ контента сверху */
+.padding-content {
+    padding-top: 1rem;
+}
+
+/* Левый сайдбар */
+.margin-right-sidebar {
+    border-right: 1px solid var(--art-border);
+    padding-top: 1rem;
+}
+
+/* Сайдбар: оранжевые пункты, hover — синий */
+.sidebar .nav-link {
+    color: #ff8c42 !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease-in-out;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link:focus-visible {
+    color: #1e90ff !important;
+    text-decoration: none !important;
+}
+
+/* Футер: белые пункты, hover — оранжевый */
+.custom_footer .nav-link {
+    color: #fff !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease-in-out;
+}
+
+.custom_footer .nav-link:hover,
+.custom_footer .nav-link:focus-visible {
+    color: #ff8c42 !important;
+    text-decoration: none !important;
+}
+
+.sidebar .text-bg-secondary,
+.sidebar .text-bg-info {
+    color: #fff !important;
+    background-color: #ff8c42 !important;
 }

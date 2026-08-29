@@ -1,34 +1,42 @@
-<nav class="navbar navbar-expand-md navbar-dark backcolor-header fixed-top">
+<nav class="navbar navbar-expand-md backcolor-header fixed-top">
+  <div class="container">
 
-      {% if lang %}
-        <a class="navbar-brand mr-4" href="{{ url_for('art_main.art_home') }}">Сайт о программировании на {{ lang }}</a>
-      {% else %}
-        <a class="navbar-brand mr-4" href="{{ url_for('art_main.art_home') }}">Сайт о программировании</a>
-      {% endif %}
+    {% if lang %}
+      <a class="navbar-brand me-3" href="{{ url_for('art_main.art_home') }}">Сайт о программировании на {{ lang }}</a>
+    {% else %}
+      <a class="navbar-brand me-3" href="{{ url_for('art_main.art_home') }}">Сайт о программировании</a>
+    {% endif %}
 
+    {# Кнопка-тогглер мобильного меню: data-bs-toggle/data-bs-target — нативный API BS5 #}
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarToggle"
+            aria-controls="navbarToggle" aria-expanded="false" aria-label="Переключить навигацию">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <div class="collapse navbar-collapse" id="navbarToggle">
-        <!-- Navbar Left Side -->
-        <div class="navbar-nav mr-auto">
-        </div>
+    <div class="collapse navbar-collapse" id="navbarToggle">
+      {# Левая часть — пока пустая, служит зазором между брендом и правым меню #}
+      <ul class="navbar-nav me-auto"></ul>
 
-        <!-- Navbar Right Side -->
-        <div class="navbar-nav">
-          {% if current_user.is_authenticated %}
-            <a class="nav-item nav-link" href="{{ url_for('art_main.art_home') }}">Articles</a>
-            <a class="nav-item nav-link" href="{{ url_for('art_main.art_manage') }}">Управление</a>
-            <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
-            <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
-            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
-            <a class="nav-item nav-link theme-toggle" onclick="toggleTheme()">Тема</a>
-          {% else %}
-            <a class="nav-item nav-link" href="{{ url_for('art_main.art_home') }}">Articles</a>
-            <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
-            <a class="nav-item nav-link" href="{{ url_for('users.register') }}">Register</a>
-            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
-            <a class="nav-item nav-link theme-toggle" onclick="toggleTheme()">Тема</a>
-          {% endif %}
-        </div>
-      </div>
-
-  </nav>
+      {# Правая часть навигации #}
+      <ul class="navbar-nav">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('art_main.art_home') }}">Статьи</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('art_main.art_manage') }}">Управление</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('users.account') }}">Аккаунт</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('users.logout') }}">Выход</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about') }}">О сайте</a></li>
+          <li class="nav-item"><a class="nav-link theme-toggle" id="theme-toggle" href="#">Тема</a></li>
+          {% include "includes/_hljs_theme_select.html" %}
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('art_main.art_home') }}">Статьи</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('users.login') }}">Вход</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('users.register') }}">Регистрация</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about') }}">О сайте</a></li>
+          <li class="nav-item"><a class="nav-link theme-toggle" id="theme-toggle" href="#">Тема</a></li>
+          {% include "includes/_hljs_theme_select.html" %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>

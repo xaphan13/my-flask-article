@@ -1,0 +1,39 @@
+K6 fresh dark /art/aaa/1787935323: {"bs":"dark","lightExists":true,"lightDisabled":true,"darkExists":true,"darkDisabled":false,"hljsCount":12}
+K6 fresh light /art/aaa/1787935323: {"bs":"light","lightExists":true,"lightDisabled":false,"darkExists":true,"darkDisabled":true,"hljsCount":12}
+=== Task 2: authenticated /art_manage ===
+--- reg.html size: 6302 bytes ---
+name="csrf_token" type="hidden" value="IjcxZjc4NGY2Y2FmYzFiMGE4NmUzYzBjMTExZjk1MDA5YTUwOThlNDYi.apL5Zg.JKVmCl7hvpuGLcZm8mN7hFKQNig"
+--- form fields ---
+name="confirm_password"
+name="csrf_token"
+name="description"
+name="email"
+name="password"
+name="submit"
+name="username"
+name="viewport"
+--- /art_manage grep ---
+d-block w-100
+table-light
+text-bg-
+--- negative checks (should be 0) ---
+  >Articles<: 0
+  >Account<: 0
+  >Logout<: 0
+  >Login<: 0
+  >Register<: 0
+  About<: 0
+
+=== /account ===
+HTTP:200
+--- account size: 6507 bytes ---
+--- img tags ---
+--- alt attrs (non-empty) ---
+alt="Аватар пользователя qa2user_1788017005"
+=== Task 3: sanity codes ===
+  / -> 302
+  /art_home -> 200
+  /art/Max/1787932544 -> 200
+  /art/Max/999 -> 404
+  /art_manage -> 302
+  /about -> 200

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-bs-theme="dark">
   <head>
     {% include 'includes/_head.html' %}
   </head>
@@ -9,19 +9,13 @@
       {% include 'includes/_header.html' %}
     </header>
 
-
-    {# show_sidebar задаётся в шаблоне страницы: {% set show_sidebar = true %} #}
     <main role="main">
-      <div class="{{ 'container-fluid' if show_sidebar else 'container' }}">
+      <div class="container-fluid">
         <div class="row">
-          {% if show_sidebar %}
-            <!-- Боковое меню -->
-            <div class="margin-right-sidebar col-md-2">
-              {% include 'includes/_sidebar.html' %}
-            </div>
-          {% endif %}
-          <!-- Основной контент -->
-          <div class="padding-content {{ 'col-md-10' if show_sidebar else 'col-md-8' }}">
+          <div class="margin-right-sidebar col-md-2">
+            {% include 'includes/_sidebar.html' %}
+          </div>
+          <div class="padding-content col-md-10">
             {% include 'includes/_flash_msg.html' %}
 
             {% block content %}{% endblock %}
@@ -30,7 +24,7 @@
       </div>
     </main>
 
-    <footer class="custom_footer mt-align-items-center">
+    <footer class="custom_footer mt-4 align-items-center">
       {% from 'includes/_footer_macro.html' import footer_new %}
       {{ footer_new(current_user) }}
     </footer>

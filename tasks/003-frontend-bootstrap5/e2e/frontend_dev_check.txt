@@ -1,0 +1,179 @@
+=== Frontend dev verification (flask-blog-1, new-frontend branch) ===
+
+==== /art_home ====
+code: 200
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /art/Max/1787932544 ====
+code: 200
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /login ====
+code: 200
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /register ====
+code: 200
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /about ====
+code: 200
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /art/Max/999 ====
+code: 404
+cdn.jsdelivr: 5
+integrity: 5
+crossorigin: 5
+navbar-toggler: 2
+data-bs-toggle: 1
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /art_manage ====
+code: 302
+cdn.jsdelivr: 0
+integrity: 0
+crossorigin: 0
+navbar-toggler: 0
+data-bs-toggle: 0
+onclick: 0
+jquery: 0
+popper: 0
+maxcdn: 0
+cdnjs: 0
+sidebar word: 0
+Раздел: 0
+Eng nav: 0
+
+==== /art/Max/1787932544 h1 count ====
+h1 count: 1
+h2 count: 24
+meta description count: 1
+
+==== /art_home HEAD first 30 lines ====
+  <head>
+    
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Сайт статей о программировании: разборы кода, обзоры и технические заметки на русском.">
+
+  
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.setAttribute('data-bs-theme', t);
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Bootstrap 5.3.8 CSS (jsdelivr + SRI) -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
+
+  
+  <link id="hljs-theme-dark" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/github-dark.min.css"
+        integrity="sha384-wH75j6z1lH97ZOpMOInqhgKzFkAInZPPSPlZpYKYTOqsaizPvhQZmAtLcPKXpLyH"
+        crossorigin="anonymous">
+==== ruff check ====
+All checks passed!
+
+==== url_map count ====
+'*****************************************************'start 'main()'
+url_map count: 16
+
+==== git status (in zone) ====
+ M flaskblog/static/art_css/base.css
+ D flaskblog/static/art_css/dark-theme.css
+ D flaskblog/static/art_css/light-theme.css
+ M flaskblog/static/art_css/scripts.js
+ M flaskblog/templates/about.html
+ M flaskblog/templates/account.html
+ M flaskblog/templates/errors/403.html
+ M flaskblog/templates/errors/404.html
+ M flaskblog/templates/errors/500.html
+ M flaskblog/templates/includes/_footer_macro.html
+ M flaskblog/templates/includes/_head.html
+ M flaskblog/templates/includes/_header.html
+ M flaskblog/templates/includes/_scripts.html
+ D flaskblog/templates/includes/_sidebar.html
+ M flaskblog/templates/layout.html
+ M flaskblog/templates/login.html
+ M flaskblog/templates/new_art/art_author.html
+ M flaskblog/templates/new_art/art_home.html
+ M flaskblog/templates/new_art/art_manage.html
+ M flaskblog/templates/register.html
+?? flaskblog/templates/includes/_form_macro.html

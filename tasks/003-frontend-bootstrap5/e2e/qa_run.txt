@@ -1,0 +1,125 @@
+=== K2 git status ===
+ M .qwen/settings.json
+ M flaskblog/static/art_css/base.css
+ D flaskblog/static/art_css/dark-theme.css
+ D flaskblog/static/art_css/light-theme.css
+ M flaskblog/static/art_css/scripts.js
+ M flaskblog/templates/about.html
+ M flaskblog/templates/account.html
+ M flaskblog/templates/errors/403.html
+ M flaskblog/templates/errors/404.html
+ M flaskblog/templates/errors/500.html
+ M flaskblog/templates/includes/_footer_macro.html
+ M flaskblog/templates/includes/_head.html
+ M flaskblog/templates/includes/_header.html
+ M flaskblog/templates/includes/_scripts.html
+ D flaskblog/templates/includes/_sidebar.html
+ M flaskblog/templates/layout.html
+ M flaskblog/templates/login.html
+ M flaskblog/templates/new_art/art_author.html
+ M flaskblog/templates/new_art/art_home.html
+ M flaskblog/templates/new_art/art_manage.html
+ M flaskblog/templates/register.html
+?? flaskblog/templates/includes/_form_macro.html
+?? tasks/current/e2e/
+?? tasks/current/screenshots/
+
+=== K2 files outside zone ===
+(empty)
+
+=== K2 deletions ===
+ D flaskblog/static/art_css/dark-theme.css
+ D flaskblog/static/art_css/light-theme.css
+ D flaskblog/templates/includes/_sidebar.html
+
+=== saving /art_home HTML ===
+7627 /tmp/art_home.html
+
+=== K1 external resources ===
+https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css
+https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/github-dark.min.css
+https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/github.min.css
+https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js
+https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js
+
+=== K1 forbidden mentions ===
+maxcdn=0
+code.jquery.com=0
+cdnjs.cloudflare.com=0
+jquery=0
+popper=1
+bootstrap@4=0
+bootstrap/4=0
+
+=== K1 SRI counts ===
+5
+5
+
+=== K4 onclick / data-bs-theme / inline theme script ===
+onclick_count=0
+data-bs-theme="dark"
+pos_localStorage=470:localStorage
+pos_first_link=719:<link rel="stylesheet"
+pos_first_head_close=1788:</head>
+
+=== K7 forbidden English labels ===
+>Articles<=0
+>Account<=0
+>Logout<=0
+>Login<=0
+>Register<=0
+>About<=0
+>Sign In<=0
+>Sign Up<=0
+>Log Out<=0
+
+=== K9 sidebar / Раздел ===
+0
+0
+
+=== K7 other pages ===
+--- /login ---
+0
+--- /register ---
+0
+--- /about ---
+0
+
+=== K8 SEO article page ===
+h1_count=1
+meta_description_count=1
+<h1 class="art-title">gemini-pro-fastapi-1</h1>
+<meta name="description" content="Сайт статей о программировании: разборы кода, обзоры и технические заметки на русском.">
+
+=== K9 art pages sidebar/Раздел ===
+--- /art/Max/1787932544 ---
+sidebar=0
+razdel=0
+--- /art/aaa/1787935323 ---
+sidebar=0
+razdel=0
+
+=== K10 regression codes ===
+/=302
+/art_home=200
+/art/Max/1787932544=200
+/art/Max/5=404
+/art/Max/999=404
+/art_manage=302
+/login=200
+/register=200
+/account=302
+/about=200
+/ redirect target:
+Location: /art_home
+
+=== K10 url_map count ===
+16
+
+=== K10 ruff check ===
+All checks passed!
+
+=== K3 HTML toggler markers ===
+navbar-toggler=2
+data-bs-toggle=collapse=1
+navbarToggle_id=1

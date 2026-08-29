@@ -1,5 +1,4 @@
 {% extends "layout.html" %}
-{% set show_sidebar = true %}
 
 {% block content %}
 
@@ -21,7 +20,7 @@
     {% if articles %}
       <div class="table-responsive">
         <table class="table table-striped table-bordered table-sm align-middle">
-          <thead class="thead-light">
+          <thead class="table-light">
             <tr>
               <th scope="col">id</th>
               <th scope="col">Файл</th>
@@ -37,33 +36,33 @@
                 <td>{{ art.art_id }}</td>
                 <td><code>{{ art.file_name }}</code></td>
                 <td colspan="3">
-                  <form method="POST" action="{{ url_for('art_main.art_manage_meta') }}" class="form-row">
+                  <form method="POST" action="{{ url_for('art_main.art_manage_meta') }}" class="row g-2">
                     <input type="hidden" name="file_name" value="{{ art.file_name }}">
-                    <div class="form-group col-md-5 mb-2">
+                    <div class="col-md-5">
                       <input type="text" name="title" value="{{ art.title }}"
                              class="form-control form-control-sm" placeholder="Заголовок">
                     </div>
-                    <div class="form-group col-md-3 mb-2">
+                    <div class="col-md-3">
                       <input type="text" name="author" value="{{ art.author }}"
                              class="form-control form-control-sm" placeholder="Автор">
                     </div>
-                    <div class="form-group col-md-3 mb-2">
+                    <div class="col-md-3">
                       <input type="text" name="lang" value="{{ art.lang }}"
                              class="form-control form-control-sm" placeholder="Язык">
                     </div>
-                    <div class="form-group col-md-1 mb-2">
-                      <button type="submit" class="btn btn-sm btn-outline-primary btn-block">OK</button>
+                    <div class="col-md-1">
+                      <button type="submit" class="btn btn-sm btn-outline-primary d-block w-100">OK</button>
                     </div>
                   </form>
                 </td>
                 <td>
                   {% if art.complete %}
-                    <span class="badge badge-success">полная</span>
+                    <span class="badge text-bg-success">полная</span>
                   {% else %}
-                    <span class="badge badge-warning">неполная</span>
+                    <span class="badge text-bg-warning">неполная</span>
                   {% endif %}
                   {% if not art.file_exists %}
-                    <span class="badge badge-danger">нет файла</span>
+                    <span class="badge text-bg-danger">нет файла</span>
                   {% endif %}
                 </td>
               </tr>
@@ -91,22 +90,22 @@
         {% for file_name in unassigned_files %}
           <li class="list-group-item">
             <div class="mb-2"><code>{{ file_name }}</code></div>
-            <form method="POST" action="{{ url_for('art_main.art_manage_meta') }}" class="form-row">
+            <form method="POST" action="{{ url_for('art_main.art_manage_meta') }}" class="row g-2">
               <input type="hidden" name="file_name" value="{{ file_name }}">
-              <div class="form-group col-md-5 mb-2">
+              <div class="col-md-5">
                 <input type="text" name="title" value=""
                        class="form-control form-control-sm" placeholder="Заголовок">
               </div>
-              <div class="form-group col-md-3 mb-2">
+              <div class="col-md-3">
                 <input type="text" name="author" value=""
                        class="form-control form-control-sm" placeholder="Автор">
               </div>
-              <div class="form-group col-md-3 mb-2">
+              <div class="col-md-3">
                 <input type="text" name="lang" value=""
                        class="form-control form-control-sm" placeholder="Язык">
               </div>
-              <div class="form-group col-md-1 mb-2">
-                <button type="submit" class="btn btn-sm btn-outline-primary btn-block">OK</button>
+              <div class="col-md-1">
+                <button type="submit" class="btn btn-sm btn-outline-primary d-block w-100">OK</button>
               </div>
             </form>
           </li>
@@ -129,8 +128,8 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>
               <strong>#{{ art.art_id }}</strong>
-              <code class="ml-2">{{ art.file_name }}</code>
-              <span class="ml-2">{{ art.title }}</span>
+              <code class="ms-2">{{ art.file_name }}</code>
+              <span class="ms-2">{{ art.title }}</span>
             </span>
           </li>
         {% endfor %}

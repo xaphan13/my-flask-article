@@ -1,14 +1,27 @@
 {% extends "layout.html" %}
-{% set show_sidebar = true %}
 
 {% block content %}
 
-  <h3><a href="{{ url_for('main.home') }}">{{ art.title }}</a></h3>
+  {# Согласно критерию SEO-минимума, на странице должен быть ровно один <h1>
+     — заголовок статьи. Тело статьи рендерится из Markdown (Python-mistune),
+     и заголовки вида «#» превращаются в <h1>. Чтобы соблюсти «ровно один»,
+     понижаем уровень заголовков внутри тела статьи на 1 в шаблоне.
+     Источник файла .md при этом не меняется. #}
+  {% set body_html = art.content
+                       | replace('<h1>', '<h2>')
+                       | replace('</h1>', '</h2>') %}
 
-  <div class="info_art">
-      {{ art.author }} - {{ art.lang }} - {{ art.art_id }}
-  </div>
+  <article class="art-content">
+    <header class="mb-4">
+      <h1 class="art-title">{{ art.title }}</h1>
+      <div class="info_art text-body-secondary small">
+        <span class="badge text-bg-secondary me-2">{{ art.lang }}</span>
+        <span class="badge text-bg-info me-2">{{ art.author }}</span>
+        <span>#{{ art.art_id }}</span>
+      </div>
+    </header>
 
-  <div>{{ art.content|safe }}</div>
+    <div class="art-body">{{ body_html|safe }}</div>
+  </article>
 
 {% endblock content %}

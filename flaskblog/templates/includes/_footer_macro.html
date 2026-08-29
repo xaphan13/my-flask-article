@@ -1,17 +1,19 @@
-
 {% macro footer_new(current_user) %}
-  <div class="container-fluid">
-    <ul class="nav justify-content-center">
-      <li class="nav-item"><a href="#" class="nav-link px-3 text-body-secondary">Home</a></li>
-      <li class="nav-item"><a href="#" class="nav-link px-3 text-body-secondary">Contact</a></li>
-      <li class="nav-item"><a href="{{ url_for('art_main.art_home') }}" class="nav-link px-3 text-body-secondary">Articles</a></li>
-      <li class="nav-item"><a href="#" class="nav-link px-3 text-body-secondary">FAQs</a></li>
-      <li class="nav-item"><a href="{{ url_for('main.about') }}" class="nav-link px-3 text-body-secondary">About</a></li>
+  <div class="container">
+    <ul class="nav justify-content-center flex-wrap">
+      <li class="nav-item"><a href="{{ url_for('main.home') }}" class="nav-link px-3 text-body-secondary">Главная</a></li>
+      <li class="nav-item"><a href="{{ url_for('art_main.art_home') }}" class="nav-link px-3 text-body-secondary">Статьи</a></li>
+      <li class="nav-item"><a href="{{ url_for('main.about') }}" class="nav-link px-3 text-body-secondary">О сайте</a></li>
+      {% if current_user.is_authenticated %}
+        <li class="nav-item"><a href="{{ url_for('users.account') }}" class="nav-link px-3 text-body-secondary">Аккаунт</a></li>
+        <li class="nav-item"><a href="{{ url_for('users.logout') }}" class="nav-link px-3 text-body-secondary">Выход</a></li>
+      {% else %}
+        <li class="nav-item"><a href="{{ url_for('users.login') }}" class="nav-link px-3 text-body-secondary">Вход</a></li>
+        <li class="nav-item"><a href="{{ url_for('users.register') }}" class="nav-link px-3 text-body-secondary">Регистрация</a></li>
+      {% endif %}
     </ul>
 
-    <hr class="bg-secondary my-lg-4">
-    <div class="text-center align-items-center" role="contentinfo">
-      <p class="text-center text-body-secondary">© 2024 Xaphan Company, Inc</p>
-    </div>
+    <hr class="my-3">
+    <p class="text-center text-body-secondary mb-0">© 2024 Xaphan Company, Inc</p>
   </div>
 {% endmacro %}

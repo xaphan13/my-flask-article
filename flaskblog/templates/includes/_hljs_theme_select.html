@@ -1,0 +1,28 @@
+{# Селектор темы подсветки кода в шапке. Список тем задан в одном месте,
+   иначе пришлось бы копипастить 15 option-ов по веткам шаблона.
+   Лейблы — собственные имена тем hljs (латиницей). #}
+{% set hljs_dark_themes = [
+    ('vs2015', 'VS Code'),
+    ('github-dark', 'GitHub Dark'),
+    ('github-dark-dimmed', 'GitHub Dark Dimmed'),
+    ('atom-one-dark', 'Atom One Dark'),
+    ('monokai', 'Monokai'),
+    ('monokai-sublime', 'Monokai Sublime'),
+    ('nord', 'Nord'),
+    ('paraiso-dark', 'Paraiso Dark'),
+    ('stackoverflow-dark', 'StackOverflow Dark'),
+    ('tokyo-night-dark', 'Tokyo Night Dark'),
+    ('gradient-dark', 'Gradient Dark'),
+    ('night-owl', 'Night Owl'),
+    ('obsidian', 'Obsidian'),
+    ('shades-of-purple', 'Shades of Purple'),
+    ('ir-black', 'Ir Black'),
+] %}
+<li class="nav-item hljs-theme-select-item d-flex align-items-center">
+  <select class="form-select form-select-sm hljs-theme-select" id="hljs-theme-select"
+          aria-label="Тема подсветки кода">
+    {% for theme_id, theme_label in hljs_dark_themes %}
+      <option value="{{ theme_id }}">{{ theme_label }}</option>
+    {% endfor %}
+  </select>
+</li>

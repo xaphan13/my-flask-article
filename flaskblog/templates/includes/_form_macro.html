@@ -1,0 +1,39 @@
+{# Макрос для рендера полей WTForms с лейблом и ошибками валидации.
+   Заменяет 12 повторённых блоков «label + input + invalid-feedback» в
+   register.html / login.html / account.html.
+
+   Использование:
+     {% from 'includes/_form_macro.html' import field_with_errors %}
+     {{ field_with_errors(form.email) }}
+     {{ field_with_errors(form.email, size='form-control-sm') }}   #}
+
+{% macro field_with_errors(field, size='form-control-lg') %}
+  <div class="mb-3">
+    {{ field.label(class="form-label") }}
+
+    {% if field.errors %}
+      {{ field(class="form-control " + size + " is-invalid") }}
+      <div class="invalid-feedback">
+        {% for error in field.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ field(class="form-control " + size) }}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# Макрос для рендера поля загрузки файла (form.picture в account.html).
+   У file-input нет удобного invalid-feedback, поэтому отдельный макрос. #}
+{% macro file_field(field) %}
+  <div class="mb-3">
+    {{ field.label(class="form-label") }}
+    {{ field(class="form-control") }}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <span class="text-danger">{{ error }}</span><br>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endmacro %}

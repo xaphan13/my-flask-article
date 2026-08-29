@@ -1,0 +1,54 @@
+== (a) link sheets after load ==
+  hljs-theme-vs2015: rules=21 -> OK
+  hljs-theme-github-dark: rules=17 -> OK
+  hljs-theme-github-dark-dimmed: rules=17 -> OK
+  hljs-theme-atom-one-dark: rules=14 -> OK
+  hljs-theme-monokai: rules=10 -> OK
+  hljs-theme-monokai-sublime: rules=14 -> OK
+  hljs-theme-nord: rules=60 -> OK
+  hljs-theme-paraiso-dark: rules=11 -> OK
+  hljs-theme-stackoverflow-dark: rules=18 -> OK
+  hljs-theme-tokyo-night-dark: rules=15 -> OK
+  hljs-theme-gradient-dark: rules=16 -> OK
+  hljs-theme-night-owl: rules=39 -> OK
+  hljs-theme-obsidian: rules=14 -> OK
+  hljs-theme-shades-of-purple: rules=16 -> OK
+  hljs-theme-ir-black: rules=14 -> OK
+== (a) verdict: PASS
+== (b) live theme switching ==
+  vs2015: bg=rgb(30, 30, 30), fg=rgb(220, 220, 220)
+  github-dark: bg=rgb(13, 17, 23), fg=rgb(201, 209, 217)
+  github-dark-dimmed: bg=rgb(34, 39, 46), fg=rgb(173, 186, 199)
+  atom-one-dark: bg=rgb(40, 44, 52), fg=rgb(171, 178, 191)
+  monokai: bg=rgb(39, 40, 34), fg=rgb(221, 221, 221)
+  monokai-sublime: bg=rgb(35, 36, 31), fg=rgb(248, 248, 242)
+  nord: bg=rgb(46, 52, 64), fg=rgb(216, 222, 233)
+  paraiso-dark: bg=rgb(47, 30, 46), fg=rgb(163, 158, 155)
+  stackoverflow-dark: bg=rgb(28, 27, 27), fg=rgb(255, 255, 255)
+  tokyo-night-dark: bg=rgb(26, 27, 38), fg=rgb(154, 165, 206)
+  gradient-dark: bg=rgb(101, 36, 135), fg=rgb(231, 228, 235)
+  night-owl: bg=rgb(1, 22, 39), fg=rgb(214, 222, 235)
+  obsidian: bg=rgb(40, 43, 46), fg=rgb(224, 226, 228)
+  shades-of-purple: bg=rgb(45, 43, 87), fg=rgb(227, 223, 255)
+  ir-black: bg=rgb(0, 0, 0), fg=rgb(248, 248, 248)
+  distinct bg count: 15
+== (b) verdict: PASS
+== (c) persistence after reload (expect monokai) ==
+  select.value=monokai
+  bg=rgb(39, 40, 34), fg=rgb(221, 221, 221)
+  localStorage['hljs-theme']=monokai
+  localStorage['theme']=null
+  expected bg rgb(39, 40, 34)
+== (c) verdict: PASS
+== (d) light site theme ==
+  bg with theme=light, hljs=monokai -> rgb(255, 255, 255)
+  bg after changing select to vs2015 (still light) -> rgb(255, 255, 255)
+== (d) verdict light-no-change: PASS
+  bg back to dark theme with hljs=vs2015 -> rgb(30, 30, 30)
+  expected ~ vs2015 bg rgb(30, 30, 30)
+== (d) verdict dark-applies: PASS
+== (e) sidebar link color: rgb(255, 140, 66)
+shot: hljs-picker-vs2015.png
+shot: hljs-picker-atom-one-dark.png
+shot: hljs-picker-dracula.png
+shot: hljs-picker-monokai.png

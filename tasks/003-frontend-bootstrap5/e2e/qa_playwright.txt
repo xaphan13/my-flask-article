@@ -1,0 +1,26 @@
+K3 initial data-bs-theme: dark
+K3 #navbarToggle has .show after click: true
+K3 console errors (mobile /art_home): []
+K3 network 404s (mobile /art_home): []
+K4 default data-bs-theme: dark
+K4 default localStorage.theme: null
+K4 after first click data-bs-theme: light
+K4 after first click localStorage.theme: light
+K4 after reload data-bs-theme: light
+K4 after reload localStorage.theme: light
+K4 after second click data-bs-theme: dark
+K4 after second click localStorage.theme: dark
+K5 dark /art_home: data-bs-theme=dark bodyBg=rgb(30, 30, 30) consoleErrs=[] net404=[]
+K5 dark /art/aaa/1787935323: data-bs-theme=dark bodyBg=rgb(30, 30, 30) consoleErrs=[] net404=[]
+K5 dark /login: data-bs-theme=dark bodyBg=rgb(30, 30, 30) consoleErrs=[] net404=[]
+K5 dark /about: data-bs-theme=dark bodyBg=rgb(30, 30, 30) consoleErrs=[] net404=[]
+K6 light /art_home: data-bs-theme=light bodyBg=rgb(250, 250, 250) consoleErrs=[]
+K6 light /art/aaa/1787935323: data-bs-theme=light bodyBg=rgb(250, 250, 250) consoleErrs=[]
+K6 light /art/aaa/1787935323 hljs: {"lightExists":true,"lightDisabled":false,"darkExists":true,"darkDisabled":true,"hljsElems":12}
+K6 light /login: data-bs-theme=light bodyBg=rgb(250, 250, 250) consoleErrs=[]
+K6 light /about: data-bs-theme=light bodyBg=rgb(250, 250, 250) consoleErrs=[]
+K6 dark /art/aaa/1787935323 hljs: {"lightDisabled":false,"darkDisabled":true,"hljsElems":12}
+K10 /art_home dark errs: [] net404: []
+K10 /art/aaa/1787935323 dark errs: [] net404: []
+K10 /art_home light errs: [] net404: []
+K10 /art/aaa/1787935323 light errs: [] net404: []
