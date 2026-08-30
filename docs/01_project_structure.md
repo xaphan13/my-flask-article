@@ -1,6 +1,8 @@
 # 01 — Карта проекта
 
-> Статус: актуально для ветки `fix_html`, HEAD `b5d7533`, Python 3.12, Flask 3.1.2.
+> Статус: актуально для ветки `new-frontend`, HEAD `b12f62c`, Python 3.12, Flask 3.1.2.
+> Фронтенд-разделы актуализированы 2026-08-31 после заданий 003–004
+> (подробности — [frontend/README.md](frontend/README.md)).
 > Описание сфокусировано на текущей структуре исходного дерева и не заменяет инструкцию
 > по запуску: [setup-and-run.md](setup-and-run.md).
 > Связанные документы: [02_architecture.md](02_architecture.md) · [03_execution_flow.md](03_execution_flow.md) ·
@@ -132,30 +134,38 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     │                               Обработчики app-wide, не ограничены блюпринтом
     │
     ├── templates/
-    │   ├── layout.html             база №1 — auth/инфо-страницы. ВКЛЮЧАЕТ
-    │   │                           includes/_flash_msg.html
+    │   ├── layout.html             ЕДИНСТВЕННАЯ база — все страницы, включая статьи.
+    │   │                           <html data-bs-theme="dark">, включает
+    │   │                           includes/_flash_msg.html → flash виден везде
     │   ├── about.html, login.html, register.html, account.html
-    │   ├── includes/               _head.html, _header.html, _scripts.html,
-    │   │                           _flash_msg.html, _footer_macro.html (макрос
-    │   │                           footer_new(current_user), общий для обеих баз)
+    │   ├── includes/               _head.html (Bootstrap 5.3.8 + 16 тем hljs,
+    │   │                           meta description, инлайн-восстановление темы),
+    │   │                           _header.html (BS5-navbar с тогглером),
+    │   │                           _sidebar.html (заглушка «Раздел 1/2/3»,
+    │   │                           пережила миграцию — под удаление),
+    │   │                           _scripts.html, _flash_msg.html,
+    │   │                           _form_macro.html (макросы форм),
+    │   │                           _hljs_theme_select.html (селектор тем hljs),
+    │   │                           _footer_macro.html (макрос footer_new)
     │   ├── new_art/
-    │   │   ├── art_base.html       база №2 — страницы статей, с сайдбаром.
-    │   │   │                       НЕ включает _flash_msg.html → flash здесь не виден
-    │   │   ├── art_home.html       список статей по title_list
-    │   │   ├── art_author.html     страница статьи; выводит art.content|safe
-    │   │   └── includes/           _art_head.html, _art_header.html, _art_scripts.html
-    │   ├── content_art/            ТЕЛА СТАТЕЙ: `art1.html`–`art4.html` и
-    │   │                           Markdown-файлы. В `articles.yaml` зарегистрированы
-    │   │                           пять (включая `gemini-pro-fastapi-1.md`); ещё три
-    │   │                           `.md` лежат в каталоге без записи в YAML. Читаются
+    │   │   ├── art_home.html       список статей карточками с бейджами меты
+    │   │   ├── art_author.html     страница статьи; единственный <h1>, тело
+    │   │   │                       через art.content|safe с понижением
+    │   │   │                       <h1>→<h2> фильтрами replace
+    │   │   └── art_manage.html     управление реестром статей (POST-формы)
+    │   ├── content_art/            ТЕЛА СТАТЕЙ: пять Markdown-файлов,
+    │   │                           зарегистрированных в articles.yaml. Читаются
     │   │                           с диска на каждый запрос; Markdown рендерится
     │   │                           функцией render_article()
-    │   └── errors/                 403.html, 404.html, 500.html, new.html (не используется)
+    │   └── errors/                 403.html, 404.html, 500.html — русские,
+    │                               на общей базе layout.html
     │
     └── static/
-        ├── art_css/               base.css, light-theme.css, dark-theme.css,
-        │                          scripts.js (переключение темы через localStorage +
-        │                          hljs.highlightAll() + smooth-scroll по сайдбару)
+        ├── art_css/               base.css (единый файл обеих тем на
+        │                          CSS-переменных; dark/light-файлов больше нет)
+        │                          + scripts.js (IIFE: тема data-bs-theme +
+        │                          localStorage, селектор 15 тёмных тем hljs,
+        │                          highlightAll только при наличии pre code)
         └── profile_pics/          default.jpg + загруженные аватары
 ```
 
@@ -191,16 +201,19 @@ flask-blog-1/                       корень проекта — ВСЕГДА
 
 ### 3.2 Внешние ресурсы фронтенда (CDN)
 
-Загружаются напрямую из шаблонов, без бандлера и без локальных копий — офлайн-режим ломается:
+Загружаются напрямую из шаблонов, без бандлера и без локальных копий — офлайн-режим
+ломается. После задания 003 все ресурсы идут с одного домена `cdn.jsdelivr.net`,
+у каждого тега `integrity` (SRI) + `crossorigin`:
 
 | Ресурс | Версия | Где подключён |
 |---|---|---|
-| Bootstrap CSS | 4.0.0 (`maxcdn.bootstrapcdn.com`) | `includes/_head.html`, `new_art/includes/_art_head.html` |
-| Bootstrap JS | 4.0.0 | `includes/_scripts.html`, `new_art/includes/_art_scripts.html` |
-| jQuery slim | 3.2.1 | оба `_scripts` |
-| Popper.js | 1.12.9 | оба `_scripts` |
-| highlight.js | **11.9.0** в `new_art/includes/_art_scripts.html`, **11.7.0** в `includes/_scripts.html` | расхождение версий между двумя иерархиями |
-| highlight.js CSS `github-dark` | 11.9.0 | только `new_art/includes/_art_head.html` |
+| Bootstrap CSS | 5.3.8 | `includes/_head.html` |
+| Bootstrap JS (bundle) | 5.3.8 | `includes/_scripts.html` |
+| highlight.js JS | 11.12.0 (`gh/highlightjs/cdn-release`) | `includes/_scripts.html` |
+| highlight.js CSS — 15 тёмных тем | 11.12.0 | `includes/_head.html`, активна `vs2015`, остальные `disabled` |
+| highlight.js CSS — светлая `vs` | 11.12.0 | `includes/_head.html`, всегда `disabled` |
+
+jQuery и Popper удалены при миграции на Bootstrap 5 (задание 003).
 
 ### 3.3 Python-зависимости
 
@@ -254,10 +267,10 @@ flask-blog-1/                       корень проекта — ВСЕГДА
 |---|---|
 | Python-кода | Текущее количество зависит от состава исходников; метрика не фиксируется в этом документе |
 | Из них мёртвый код | 34 (`data_ex.py`) + ~32 (DTO в `schema_art.py`) ≈ 11 % |
-| Маршрутов в `url_map` | 13 (12 прикладных + встроенный `static`) |
+| Маршрутов в `url_map` | 16 (15 прикладных + встроенный `static`; проверено запуском 2026-08-31) |
 | Блюпринтов | 4 (`art_main`, `main`, `users`, `errors`) |
 | ORM-моделей | 2 (`User`, `Post`; для `Post` нет ни одного маршрута) |
-| Jinja-шаблонов | 26, две независимые иерархии наследования |
+| Jinja-шаблонов | 19 HTML, единая иерархия наследования `layout.html` (+ 5 Markdown-файлов тел статей в `content_art/`) |
 | Тестов | 0 |
 | Миграций | 0 (нет Flask-Migrate/Alembic) |
 | CI-пайплайнов | 0 (каталога `.github` нет) |

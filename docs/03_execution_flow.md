@@ -1,6 +1,7 @@
 # 03 — Логика и работа кода
 
-> Актуально для ветки `fix_html`, HEAD `b5d7533`. Описание потока основано на текущем коде;
+> Актуально для ветки `new-frontend`, HEAD `b12f62c` (актуализировано 2026-08-31).
+> Описание потока основано на текущем коде;
 > приложение и тесты для этой редакции документации не запускались. Архитектурный контекст:
 > [02_architecture.md](02_architecture.md).
 
@@ -134,7 +135,7 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 /about               → 200
 /art/Max/1           → 200
 /art/anybody-else/1  → 200   ← <author> не проверяется, любая строка даёт ту же статью
-/art/Max/999         → 500   ← KeyError вместо 404
+/art/Max/999         → 404   ← исправлено заданием 001 (было 500, KeyError)
 /login               → 200
 /nope                → 404
 ```
@@ -171,11 +172,11 @@ def art_home():
 ```
 
 1. Итерация по `art_dict_file` — словарю, собранному при импорте `schema_art`.
-2. `x.dict(...)` сериализует каждую `ArticleLang` в `dict`. Флаг `exclude_unset=True`
-   отбрасывает поля, оставшиеся дефолтными; `exclude={'content'}` убирает тело статьи.
-   Фактический результат (проверено): `{'author', 'lang', 'art_id', 'title', 'file_name'}`.
-   Метод `.dict()` — API Pydantic v1, он выдаёт `PydanticDeprecatedSince20`; замена —
-   `model_dump()`.
+2. `model_dump(exclude={"content"})` сериализует каждую `ArticleLang` в `dict`,
+    убирая тело статьи. Фактический результат (проверено):
+   `{'author', 'lang', 'art_id', 'title', 'file_name'}`. (Ранее использовался
+   `.dict()` — API Pydantic v1 с предупреждением `PydanticDeprecatedSince20`;
+   переведён на `model_dump()`.)
 3. Весь список логируется на уровне INFO — то есть содержимое индекса пишется в файл
    при каждом заходе на главную.
 4. Шаблон `new_art/art_home.html` строит ссылки через
@@ -188,27 +189,36 @@ def art_home():
 ```python
 @art_main.route("/art/<string:author>/<int:art_id>")
 def art_author(author, art_id):
-    logFC.info(f"art_author : '/art/<string:username>' = {author} - {art_id}")
-    art: ArticleLang = art_dict_file[art_id]
-    content: str = render_article(art.file_name)
-    art.content = content
-    return render_template("new_art/art_author.html", lang=art.lang, art=art)
+    logFC.info(f"art_author : '/art/<string:author>/<int:art_id>' = {author} - {art_id}")
+    art = get_art(art_id)
+    if art is None:
+        abort(404)
+    if not _is_complete(art):
+        abort(404)
+    content_dir = get_path_dir()
+    if not os.path.exists(os.path.join(content_dir, art.file_name)):
+        abort(404)
+    content = render_article(art.file_name, content_dir)
+    art_for_template = art.model_copy(update={"content": content})
+    return render_template(
+        "new_art/art_author.html", lang=art_for_template.lang, art=art_for_template
+    )
 ```
 
 1. **`author` игнорируется** — используется только в логе. Поиск идёт исключительно по
    `art_id`, поэтому разные значения автора ведут к одной статье с тем же идентификатором.
-2. `art_dict_file[art_id]` — прямое индексирование словаря. Отсутствующий ключ даёт
-   `KeyError`, который превращается в **500, а не в 404**. Корректный вариант —
-   `art_dict_file.get(art_id)` с `abort(404)`.
+2. `get_art(art_id)` + `abort(404)` при отсутствии записи — исправлено заданием 001
+   (раньше было прямое индексирование `art_dict_file[art_id]` с `KeyError` → 500).
+   Дополнительно 404 отдаётся для неполных записей и отсутствующих файлов.
 3. `render_article(art.file_name)` сначала читает файл из каталога, зафиксированного при
    импорте. Для `.md` и `.markdown` содержимое преобразуется функцией `markdown()` с
    расширениями `fenced_code` и `tables`; остальные расширения, включая `.html`,
    возвращаются без преобразования. Кэша нет — чтение и Markdown-рендеринг выполняются на
-   каждый запрос. Отсутствующий файл даст `FileNotFoundError` → 500.
-4. `art.content = content` — **мутация объекта, разделяемого между всеми запросами.**
-   Сейчас поле перезаписывается при каждом запросе; любое запросо-зависимое значение здесь
-   станет источником гонки.
-5. Шаблон выводит `{{ art.content|safe }}` — экранирование отключено сознательно. Для
+   каждый запрос.
+4. `art_for_template = art.model_copy(update={"content": content})` — в шаблон уходит
+   **копия** записи: общие объекты `art_dict_file` не мутируются (ранее `art.content =`
+   менял модуль-level состояние; исправлено в задании 002).
+5. Шаблон выводит `{{ body_html|safe }}` — экранирование отключено сознательно. Для
    HTML-файлов это доверенная разметка из репозитория; для Markdown это HTML, созданный
    библиотекой `markdown`. Встроенная HTML-разметка внутри Markdown также проходит без
    дополнительной очистки, поэтому файлы `content_art/` считаются доверенным контентом.
@@ -325,17 +335,19 @@ def createDB(post_id=999):
 | 403 | `templates/errors/403.html` | явный `abort(403)` — в коде не вызывается ни разу |
 | 500 | `templates/errors/500.html` | необработанное исключение, **только при `DEBUG=False`** |
 
-Шаблоны наследуют `layout.html`, поэтому страницы ошибок оформлены как остальной сайт.
-Файл `templates/errors/new.html` не используется.
+Шаблоны наследуют `layout.html`, поэтому страницы ошибок оформлены как остальной сайт
+и русифицированы (задание 003).
 
-**Обработчик 500 в рабочей конфигурации не задействован.** Проверено на одном и том же
-запросе `/art/Max/999` в трёх средах:
+**Обработчик 500 в рабочей конфигурации не задействован на сценарии с неизвестным
+`art_id`.** Историческая проверка (до задания 001) на запросе `/art/Max/999` в трёх средах
+показывала 500 из-за `KeyError`; теперь этот маршрут отдаёт 404, и приведённая ниже
+механика актуальна только для прочих необработанных исключений:
 
-| Среда | Поведение |
+| Среда | Поведение при необработанном исключении |
 |---|---|
 | `create_app(debug_mode=False)` + `test_client` | HTTP 500, отрисован `errors/500.html` |
-| `create_app(debug_mode=True)` + `test_client` | `KeyError` пробрасывается наружу |
-| `python -m flaskblog.run` (waitress, `debug_mode=True`) | HTTP 500, тело 110 байт: `Internal Server Error … (generated by waitress)`; трейсбек `KeyError: 999` уходит в stdout |
+| `create_app(debug_mode=True)` + `test_client` | исключение пробрасывается наружу |
+| `python -m flaskblog.run` (waitress, `debug_mode=True`) | HTTP 500, тело 110 байт: `Internal Server Error … (generated by waitress)`; трейсбек уходит в stdout |
 
 Механика: `debug_mode=True` включает `PROPAGATE_EXCEPTIONS`, поэтому Flask **не** вызывает
 свой обработчик, а пробрасывает исключение в WSGI-сервер. Интерактивного отладчика
@@ -356,7 +368,8 @@ WSGI-сервера. Раскрытия исходников в ответе н�
   который в `logging_config` не сконфигурирован, — то есть в кастомный файл лога
   ошибка не попадёт.
 - **Ошибки предметной области отображаются в неверные HTTP-коды.** Главный пример —
-  неизвестный `art_id`: `KeyError` → 500 вместо 404 (проверено).
+  неизвестный `art_id`: `KeyError` → 500 вместо 404 — **исправлен заданием 001**
+  (теперь `get_art()` + `abort(404)`).
 - **Нет откатов транзакций.** `db.session.commit()` вызывается без `try/except`
   и без `db.session.rollback()` в обработчике ошибки, поэтому `IntegrityError`
   оставляет сессию в сломанном состоянии до конца запроса.

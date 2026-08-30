@@ -1,6 +1,6 @@
 # 02 — Архитектура и паттерны
 
-> Актуально для ветки `fix_html`, HEAD `b5d7533`. Карта файлов: [01_project_structure.md](01_project_structure.md).
+> Актуально для ветки `new-frontend`, HEAD `b12f62c` (актуализировано 2026-08-31). Карта файлов: [01_project_structure.md](01_project_structure.md).
 > Пошаговая логика выполнения: [03_execution_flow.md](03_execution_flow.md).
 
 ## 1. Высокоуровневая архитектура
@@ -69,7 +69,7 @@
 | Источник данных | `articles.yaml` + файлы `.html`/`.md`/`.markdown` | PostgreSQL |
 | Точки входа | `/art_home`, `/art/<author>/<art_id>` | `/register`, `/login`, `/logout`, `/account` |
 | Модель | Pydantic `ArticleLang` | SQLAlchemy `User`, `Post` |
-| База шаблонов | `new_art/art_base.html` | `layout.html` |
+| База шаблонов | `layout.html` (единая для всего сайта) | `layout.html` |
 | Нужна ли БД | нет | да |
 | Влияние авторизации | только вид шапки | доступ к `/account` |
 
@@ -202,30 +202,26 @@ def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 `markdown(..., extensions=["fenced_code", "tables"])`. Абстракции репозитория нет —
 обработчик сам вызывает `render_article()`.
 
-**Опасное место.** Обработчик мутирует общий объект:
-
-```python
-art: ArticleLang = art_dict_file[art_id]  # общий для всех запросов инстанс
-art.content = content  # мутация модуль-level состояния
-```
-
-Сейчас это безвредно, так как значение перезаписывается на каждом запросе одним и тем же
-содержимым файла. Но объект `ArticleLang` **разделяется между всеми запросами и потоками** —
-добавление в него любого запросо-зависимого поля немедленно даст гонку.
+**Бывшее опасное место — устранено (задание 002).** Раньше обработчик мутировал общий
+объект (`art.content = content` на модуль-level экземпляре `ArticleLang`); теперь в
+шаблон уходит `art.model_copy(update={"content": content})`, и общие объекты
+`art_dict_file` остаются неизменяемыми.
 
 ### 2.6 Шаблонное наследование и макросы
 
 Композиция представления построена на трёх механизмах Jinja:
 
-- `{% extends %}` — две независимые базы: `layout.html` (auth/инфо) и
-  `new_art/art_base.html` (статьи).
-- `{% include %}` — переиспользование `<head>`, шапки и подключения скриптов.
-- `{% macro %}` — единственный общий для обеих иерархий элемент:
-  `includes/_footer_macro.html::footer_new(current_user)`.
+- `{% extends %}` — **одна** база `layout.html` для всех страниц, включая статьи
+  (вторая база `new_art/art_base.html` и её партиалы `_art_*.html` удалены при
+  миграции на Bootstrap 5, задание 003).
+- `{% include %}` — переиспользование `<head>`, шапки, сайдбара, flash-партиала
+  и подключения скриптов; селектор тем hljs включается внутри `_header.html`.
+- `{% macro %}` — два макроса: `includes/_footer_macro.html::footer_new(current_user)`
+  и `includes/_form_macro.html::field_with_errors/file_field` (дедупликация форм,
+  задание 003).
 
-Практическое следствие расщепления баз: `includes/_flash_msg.html` подключён **только** в
-`layout.html`. Любой `flash()` перед редиректом на страницу статьи будет молча потерян
-(точнее — останется в сессии до первого рендера страницы на базе `layout.html`).
+Следствие единой базы: `includes/_flash_msg.html` подключён в `layout.html`, поэтому
+`flash()` виден на любой странице сайта, включая статьи.
 
 ### 2.7 Валидация: два несвязанных механизма
 
@@ -253,16 +249,16 @@ GET /art/Max/1
   │
   ├─ art_main.art_author(author, art_id)          routesArticles.py
   │    ├─ logFC.info(...)                          → stdout + файл лога
-  │    ├─ art = art_dict_file[art_id]              словарь в памяти
-  │    │    KeyError при неизвестном id → 500, НЕ 404 (проверено)
+  │    ├─ art = art_dict_file.get(art_id)          словарь в памяти
+  │    │    неизвестный id → abort(404) (исправлено заданием 001, было 500)
   │    ├─ content = render_article(art.file_name)  ЧТЕНИЕ ДИСКА, каждый запрос
   │    │    ├─ .html → содержимое без преобразования
   │    │    └─ .md/.markdown → markdown(..., fenced_code + tables)
   │    │    каталог зафиксирован при импорте (см. 01 §4)
-  │    └─ art.content = content                    мутация общего объекта
+  │    └─ art_for_template = art.model_copy(...)    копия, общий объект не мутируется
   │
   ├─ render_template('new_art/art_author.html', lang=art.lang, art=art)
-  │    art_base.html → _art_head/_art_header/_art_scripts + footer_new
+  │    layout.html → _head/_header/_scripts + footer_new
   │    {{ art.content|safe }} — экранирование ОТКЛЮЧЕНО
   │
   └─ 200 text/html
@@ -321,8 +317,9 @@ POST /account  (multipart: username, email, picture)
 | Индекс статей | память процесса | `art_dict_file`, заполняется при импорте | изменение состава статей требует перезапуска |
 | Тело статьи | файловая система | `render_article()` на каждый запрос | HTML возвращается как есть; Markdown преобразуется в HTML; кэша нет |
 | Аватары | локальный диск контейнера/хоста | `static/profile_pics/` | НЕ в volume → теряются при пересборке контейнера |
-| Тема оформления | `localStorage` браузера | `static/art_css/scripts.js` | на сервер не передаётся |
-| Flash-сообщения | сессия | `flash()` / `get_flashed_messages()` | видны только на базе `layout.html` |
+| Тема оформления | `localStorage` браузера + `data-bs-theme` на `<html>` | `static/art_css/scripts.js` | на сервер не передаётся; восстановление инлайн-скриптом в `<head>` |
+| Тема подсветки кода | `localStorage['hljs-theme']` | там же | 15 тёмных тем hljs, селектор в шапке |
+| Flash-сообщения | сессия | `flash()` / `get_flashed_messages()` | видны на всех страницах — единая база `layout.html` |
 
 Приложение почти stateless на уровне процесса — кроме разделяемого `art_dict_file`.
 Это делает горизонтальное масштабирование возможным без внешнего session-store,
