@@ -9,8 +9,8 @@
 
 ## Задания нет
 
-Задание 003 «Модернизация фронтенда: переход на Bootstrap 5.3.x» закрыто
-2026-08-29 — см. [tasks/003-frontend-bootstrap5/REQUIREMENTS.md](../003-frontend-bootstrap5/REQUIREMENTS.md)
+Задание 004 «Доводка светлой темы: кремовый фон и код на тёмном фоне» закрыто
+2026-08-29 — см. [tasks/004-light-theme-code-darkbg/REQUIREMENTS.md](../004-light-theme-code-darkbg/REQUIREMENTS.md)
 (отчёт о выполнении с доказательствами внутри).
 
 Новое задание кладётся в этот файл пользователем.

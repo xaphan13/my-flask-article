@@ -70,31 +70,20 @@
     try { localStorage.setItem(HLJS_STORAGE_KEY, t); } catch (e) {}
   }
 
-  // Синхронизирует активную таблицу стилей highlight.js с темой сайта И выбранной
-  // тёмной темой. Светлая тема одна (vs), её выбор селектором не меняется —
-  // при светлой теме сайта активна она, при тёмной — выбранный пользователем id.
+  // Синхронизирует активную таблицу стилей highlight.js с выбранной тёмной темой.
+  // Код всегда на тёмном фоне в обеих темах сайта: ссылка светлой темы (vs)
+  // всегда disabled, активна ровно одна тёмная ссылка — выбранный пользователем id
+  // (или дефолт, если id из localStorage невалиден).
   // Список тёмных ссылок получаем через data-атрибут, чтобы не перечислять id.
-  function syncHighlightTheme(t) {
+  function syncHighlightTheme() {
     var light = document.getElementById('hljs-theme-light');
     var darkLinks = document.querySelectorAll('link[data-hljs-dark]');
     if (!light || !darkLinks.length) return;
 
-    if (t === 'light') {
-      // Светлая тема сайта: код в цветах vs, выбор селектора не учитывается,
-      // но ссылку выбранной тёмной оставляем disabled, чтобы фон/цвета не смешивались.
-      light.disabled = false;
-      for (var i = 0; i < darkLinks.length; i++) {
-        darkLinks[i].disabled = true;
-      }
-      return;
-    }
-
-    // Тёмная тема сайта: активна ровно одна тёмная ссылка — выбранный id
-    // (или дефолт, если id из localStorage невалиден).
     var chosen = readHljsTheme();
     light.disabled = true;
-    for (var j = 0; j < darkLinks.length; j++) {
-      var link = darkLinks[j];
+    for (var i = 0; i < darkLinks.length; i++) {
+      var link = darkLinks[i];
       var id = link.id.replace(/^hljs-theme-/, '');
       link.disabled = (id !== chosen);
     }
@@ -102,7 +91,7 @@
 
   function applyTheme(t) {
     document.documentElement.setAttribute('data-bs-theme', t);
-    syncHighlightTheme(t);
+    syncHighlightTheme();
   }
 
   // === Подписки на события ===================================================
@@ -129,10 +118,9 @@
     var value = e.target.value;
     if (HLJS_DARK_THEMES.indexOf(value) < 0) value = HLJS_DEFAULT;
     writeHljsTheme(value);
-    var siteTheme = document.documentElement.getAttribute('data-bs-theme') || 'dark';
-    if (siteTheme === 'dark') {
-      syncHighlightTheme(siteTheme);
-    }
+    // Селектор работает в обеих темах сайта: код всегда на тёмном фоне,
+    // выбор меняет активную hljs-таблицу независимо от темы.
+    syncHighlightTheme();
   }
 
   function initHljsThemeSelect() {

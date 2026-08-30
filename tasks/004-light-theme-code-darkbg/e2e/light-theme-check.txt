@@ -1,0 +1,26 @@
+URL: http://127.0.0.1:5000/art/aaa/1787935323
+Дата: 2026-08-29T20:59:38.062Z
+
+===== LIGHT =====
+[light] data-bs-theme на <html> после networkidle = light
+[light] body.backgroundColor = rgb(247, 243, 236)
+[light] pre code.hljs.backgroundColor = rgb(30, 30, 30)
+[light] inline code.backgroundColor = rgb(46, 46, 46)
+[light] inline code.color = rgb(224, 224, 224)
+[light] baseline pre.hljs фон (vs2015) = rgb(30, 30, 30)
+[light] #hljs-theme-select существует = true
+[light] опции селектора: [{"value":"vs2015","disabled":false,"selected":true},{"value":"github-dark","disabled":false,"selected":false},{"value":"github-dark-dimmed","disabled":false,"selected":false},{"value":"atom-one-dark","disabled":false,"selected":false},{"value":"monokai","disabled":false,"selected":false},{"value":"monokai-sublime","disabled":false,"selected":false},{"value":"nord","disabled":false,"selected":false},{"value":"paraiso-dark","disabled":false,"selected":false},{"value":"stackoverflow-dark","disabled":false,"selected":false},{"value":"tokyo-night-dark","disabled":false,"selected":false},{"value":"gradient-dark","disabled":false,"selected":false},{"value":"night-owl","disabled":false,"selected":false},{"value":"obsidian","disabled":false,"selected":false},{"value":"shades-of-purple","disabled":false,"selected":false},{"value":"ir-black","disabled":false,"selected":false}]
+[light] после выбора monokai pre.hljs фон = rgb(39, 40, 34)
+[light] после возврата vs2015 pre.hljs фон = rgb(30, 30, 30)
+[light] .hljs-keyword.color = rgb(86, 156, 214)
+[light] header = {"bg":"rgb(53, 71, 84)","tag":"NAV","cls":"navbar navbar-expand-md backcolor-header fixed-top"}
+[light] подключённые hljs-стили: []
+
+===== DARK =====
+[dark] data-bs-theme на <html> после networkidle = dark
+[dark] body.backgroundColor = rgb(30, 30, 30)
+[dark] pre code.hljs.backgroundColor = rgb(30, 30, 30)
+[dark] inline code.backgroundColor = rgb(46, 46, 46)
+[dark] inline code.color = rgb(30, 255, 30)
+[dark] .hljs-keyword.color = rgb(86, 156, 214)
+[dark] подключённые hljs-стили: []
