@@ -20,7 +20,7 @@ flask-blog-1/                  <- корень проекта (ВСЕГДА cwd 
 ├── local.env                  локальные переменные окружения (НЕ в git, создать вручную)
 ├── compose-nginx-db.yml       docker compose: app_flask + db + pgadmin + nginx
 ├── docker_manager.sh          хелпер: создание docker-сети, остановка контейнеров
-├── git_manager.sh
+├── git_manager.sh             хелперы git: br | st | brst | commit
 ├── nginx/
 │   ├── Docker-nginx
 │   ├── nginx.conf             TLS + reverse proxy на 172.20.1.50:5000
@@ -36,11 +36,11 @@ flask-blog-1/                  <- корень проекта (ВСЕГДА cwd 
     ├── logger/config_log.py   ConfigLogger + dictConfig
     ├── new_articles/
     │   ├── articles.yaml      метаданные статей
-    │   ├── schema_art.py      загрузка YAML, чтение HTML и рендер Markdown
-    │   └── routesArticles.py  список и показ статей
-    ├── templates/content_art/ HTML- и Markdown-файлы статей
+    │   ├── schema_art.py      загрузка YAML (mtime-кэш), чтение файлов и рендер Markdown
+    │   └── routes_articles.py список, показ и управление статьями (/art_manage)
+    ├── templates/content_art/ Markdown-файлы статей (.md/.markdown)
     ├── main/, users/, errors/ остальные блюпринты
-    ├── templates/, static/
+    ├── templates/, static/    единый layout.html (Bootstrap 5), стили base.css
     └── log/                   каталог логов (в git нет; создаётся на старте
                                относительно cwd, см. п. 6.5)
 ```
@@ -52,7 +52,7 @@ flask-blog-1/                  <- корень проекта (ВСЕГДА cwd 
 ### 2.1 Виртуальное окружение и зависимости
 
 ```bash
-cd ~/0_26_MY_pro_one/flask-blog-1
+cd ~/0_0_26_new_one/my-flask-article
 
 uv sync                 # создаст .venv и установит зависимости по uv.lock
 source .venv/bin/activate
@@ -94,7 +94,7 @@ DB_HOST=127.0.0.1
 DB_PORT=9032
 DB_NAME=flask_blog
 
-# ЕДИНСТВЕННЫЙ источник строки подключения (config.py:20)
+# Основной источник строки подключения (config.py:20-22)
 DATABASE_URI=postgresql+psycopg2://flask_user:flask_password@127.0.0.1:9032/flask_blog
 
 # --- Логи ---
@@ -107,12 +107,12 @@ LOG_FILE=FLASK.log
 | Переменная | Где читается | Обязательна | Комментарий |
 |---|---|---|---|
 | `SECRET_KEY` | `config.py:10` | да | сессии, CSRF (Flask-WTF). Без него формы/логин упадут |
-| `DATABASE_URI` | `config.py:20` | да | полный DSN, например `postgresql+psycopg2://user:pass@host:port/db` |
-| `DB_USER` | `config.py:13` | для compose | пробрасывается в `POSTGRES_USER` |
-| `DB_PASSWORD` | `config.py:14` | для compose | `POSTGRES_PASSWORD` |
-| `DB_HOST` | `config.py:15` | нет | сейчас в DSN не используется (строка 19 закомментирована) |
-| `DB_PORT` | `config.py:16` | нет | то же |
-| `DB_NAME` | `config.py:17` | для compose | `POSTGRES_DB` |
+| `DATABASE_URI` | `config.py:20` | да (либо полный набор `DB_*`) | полный DSN; если не задан — DSN собирается из `DB_*` (строки 21-22) |
+| `DB_USER` | `config.py:13` | для compose / фолбэка | пробрасывается в `POSTGRES_USER`; участвует в сборке DSN при пустом `DATABASE_URI` |
+| `DB_PASSWORD` | `config.py:14` | для compose / фолбэка | `POSTGRES_PASSWORD` |
+| `DB_HOST` | `config.py:15` | для фолбэка | хост для сборки DSN при пустом `DATABASE_URI` |
+| `DB_PORT` | `config.py:16` | для фолбэка | то же |
+| `DB_NAME` | `config.py:17` | для compose / фолбэка | `POSTGRES_DB` |
 | `LOG_DIR` | `config.py:23` | **да** | если `None` — падение на старте, см. раздел 6.2 |
 | `LOG_FILE` | `config.py:24` | **да** | имя файла лога, напр. `FLASK.log` |
 | `PGADMIN_EMAIL` | `compose-nginx-db.yml:31` | для compose | логин pgAdmin |
@@ -129,7 +129,7 @@ LOG_FILE=FLASK.log
 `Post` (id, title, date_posted, content, user_id → user.id).
 
 Миграций (Alembic/Flask-Migrate) в проекте нет. Таблицы создаются HTTP-роутом
-`flaskblog/main/routesMain.py:30-35` через `db.create_all()`:
+`flaskblog/main/routes_main.py` через `db.create_all()`:
 
 ```
 GET http://127.0.0.1:5000/createDB
@@ -151,27 +151,35 @@ docker run -d --name pg_flask_dev \
 подменить `DATABASE_URI` в `local.env`:
 
 ```dotenv
-DATABASE_URI=sqlite:////home/max/0_26_MY_pro_one/flask-blog-1/instance/blog.db
+DATABASE_URI=sqlite:///site.db
 ```
 
-Каталог `instance/` уже в `.gitignore`; создать его перед первым запуском (`mkdir -p instance`).
+Файл создаётся Flask-SQLAlchemy в каталоге `instance/` при первом обращении к БД
+(например, по `/createDB`); каталог `instance/` уже в `.gitignore`.
 
 ### 3.1 Добавление статьи
 
 Метаданные находятся в `flaskblog/new_articles/articles.yaml`. Для новой статьи нужно:
 
-1. добавить запись с уникальным целочисленным `art_id`, автором, языком, заголовком и `file_name`;
-2. положить соответствующий файл в `flaskblog/templates/content_art/`;
-3. перезапустить приложение, потому что YAML загружается при импорте модуля.
+1. положить Markdown-файл (`.md`/`.markdown`) в `flaskblog/templates/content_art/`;
+2. добавить запись с уникальным целочисленным `art_id`, автором, языком, заголовком
+   и `file_name` (шаги 1–2 умеет делать страница `/art_manage` после входа: кнопка
+   «добавить все новые файлы» и форма добавления/обновления записи).
+
+Реестр перечитывается с диска автоматически — `schema_art.get_articles()` сравнивает
+`mtime`/`size` файла и перезагружает его при изменении, поэтому перезапуск приложения
+не нужен.
 
 Поддерживаемые форматы тела:
 
-- `.html` — содержимое возвращается без преобразования;
 - `.md` и `.markdown` — преобразуются библиотекой `markdown` с расширениями
-  `fenced_code` и `tables`.
+  `fenced_code` и `tables`;
+- `.html` — содержимое возвращается без преобразования (но в список файлов
+  `/art_manage` такие файлы не попадают — сканер видит только `.md`/`.markdown`).
 
-Результат выводится через `{{ art.content|safe }}`, поэтому HTML и Markdown-файлы должны
-считаться доверенным содержимым репозитория.
+Результат выводится через `{{ art.content|safe }}`, поэтому файлы статей должны
+считаться доверенным содержимым репозитория. Записи с пустыми `author`/`lang`/`title`
+и записи без файла на диске в `/art_home` не показываются, при прямом заходе дают 404.
 
 ---
 
@@ -180,7 +188,7 @@ DATABASE_URI=sqlite:////home/max/0_26_MY_pro_one/flask-blog-1/instance/blog.db
 Все команды — **из корня проекта** с активированным venv.
 
 ```bash
-cd ~/0_26_MY_pro_one/flask-blog-1
+cd ~/0_0_26_new_one/my-flask-article
 source .venv/bin/activate
 ```
 
@@ -216,11 +224,11 @@ gunicorn -w 1 -b 0.0.0.0:5000 flaskblog.run:app
 
 | Маршрут | Файл |
 |---|---|
-| `/`, `/home` | `flaskblog/main/routesMain.py:12-13` |
-| `/about` | `flaskblog/main/routesMain.py:19` |
-| `/createDB`, `/createDB/<int:post_id>` | `flaskblog/main/routesMain.py:30-32` |
-| `/register`, `/login`, `/logout`, `/account` | `flaskblog/users/routesUsers.py:20,41,61,68` |
-| `/art_home`, `/art/<author>/<art_id>` | `flaskblog/new_articles/routesArticles.py:11,20` |
+| `/`, `/home` | `flaskblog/main/routes_main.py` |
+| `/about` | `flaskblog/main/routes_main.py` |
+| `/createDB`, `/createDB/<int:post_id>` | `flaskblog/main/routes_main.py` |
+| `/register`, `/login`, `/logout`, `/account` | `flaskblog/users/routes_users.py` |
+| `/art_home`, `/art/<author>/<art_id>`, `/art_manage` (+ POST `/art_manage/add_all`, `/art_manage/meta`) | `flaskblog/new_articles/routes_articles.py` |
 
 ### Как запускать НЕ надо
 
@@ -353,10 +361,12 @@ flaskblog/logger/config_log.py:20  ->  os.path.exists(pathDir)
 
 ### 6.3 `RuntimeError: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set`
 
-Возникает в `flaskblog/__init__.py:26` (`db.init_app(app)`), если не задан `DATABASE_URI`.
-Обратите внимание: `DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_NAME` **сами по себе
-не собирают DSN** — строка сборки закомментирована в `flaskblog/config.py:19`, используется
-только `DATABASE_URI` (строка 20).
+Возникает в `flaskblog/__init__.py` (`db.init_app(app)`), если не задан ни `DATABASE_URI`,
+ни полный набор `DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_NAME`. Приоритет:
+если `DATABASE_URI` задан — используется он; иначе DSN собирается как
+`postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}`
+(`flaskblog/config.py:20-22`). Частичный набор `DB_*` (например, только `DB_HOST`/
+`DB_PORT`) даст DSN с `None` внутри — лучше задавать `DATABASE_URI` явно.
 
 ### 6.4 `LOG_DIR` не может быть вложенным путём
 
@@ -411,10 +421,10 @@ python -m flaskblog.run
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:5000/
 ```
 
-Ожидаемый результат п.1 — список из 13 правил (`/`, `/home`, `/about`, `/createDB`,
+Ожидаемый результат п.1 — список из 16 правил (`/`, `/home`, `/about`, `/createDB`,
 `/createDB/`, `/createDB/<int:post_id>`, `/register`, `/login`, `/logout`, `/account`,
-`/art_home`, `/art/<string:author>/<int:art_id>`, `/static/<path:filename>`),
-п.4 — HTTP `200`.
+`/art_home`, `/art/<string:author>/<int:art_id>`, `/art_manage`, `/art_manage/add_all`,
+`/art_manage/meta`, `/static/<path:filename>`), п.4 — HTTP `200`.
 
 ---
 

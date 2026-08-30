@@ -34,7 +34,7 @@
    │  │ art_main | main | users | errors           │   │  flaskblog/*/routes*.py
    │  └────────────────────────────────────────────┘   │
    │  ┌── ВАЛИДАЦИЯ ───────────────────────────────┐   │
-   │  │ WTForms (HTML-формы) │ Pydantic (статьи)   │   │  formsUsers.py / schema_art.py
+   │  │ WTForms (HTML-формы) │ Pydantic (статьи)   │   │  forms_users.py / schema_art.py
    │  └────────────────────────────────────────────┘   │
    │  ┌── ДОСТУП К ДАННЫМ ─────────────────────────┐   │
    │  │ ORM-модели  │  чтение файлов статей        │   │  models.py / schema_art.py
@@ -184,28 +184,32 @@ class ConfigLogger:
 
 ### 2.5 Ленивое чтение шаблонов статей вместо репозитория
 
-Роль репозитория для статей играет пара «словарь в памяти + функция чтения файла»:
+Роль репозитория для статей играет пара «реестр в памяти + функция чтения файла»:
 
 ```python
-articles_data = yaml.safe_load(articles_path.read_text(encoding="utf8"))
-art_files: List[ArticleLang] = [ArticleLang(**article) for article in articles_data["articles"]]
-art_dict_file: Dict[int, ArticleLang] = {art.art_id: art for art in art_files}
+def get_articles() -> list[ArticleLang]:
+    # mtime/size-кэш: перечитывает articles.yaml при изменении файла
 
+def get_art(art_id: int) -> ArticleLang | None:
+    # поиск записи по art_id
 
 def read_html(name_html: str, name_dir: str = get_path_dir()) -> str: ...
 def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 ```
 
-Индекс (метаданные) загружается из YAML при импорте, валидируется через `ArticleLang` и
-остаётся статичным до перезапуска процесса. Тело статьи читается с диска на каждый запрос.
-`render_article()` возвращает HTML-файл без изменений, а для `.md`/`.markdown` вызывает
-`markdown(..., extensions=["fenced_code", "tables"])`. Абстракции репозитория нет —
-обработчик сам вызывает `render_article()`.
+Индекс (метаданные) валидируется через `ArticleLang` при первом обращении и
+перечитывается с диска при изменении `mtime`/`size` файла — перезапуск процесса не нужен
+(задание 002; до этого реестр загружался при импорте и жил до перезапуска). Тело статьи
+читается с диска на каждый запрос. `render_article()` возвращает HTML-файл без
+изменений, а для `.md`/`.markdown` вызывает `markdown(..., extensions=["fenced_code",
+"tables"])`. Абстракции репозитория нет — обработчик сам вызывает `render_article()`.
+Запись реестра — `save_articles()`: атомарная замена `articles.yaml` через временный
+файл; вызывается POST-формами `/art_manage`.
 
 **Бывшее опасное место — устранено (задание 002).** Раньше обработчик мутировал общий
 объект (`art.content = content` на модуль-level экземпляре `ArticleLang`); теперь в
-шаблон уходит `art.model_copy(update={"content": content})`, и общие объекты
-`art_dict_file` остаются неизменяемыми.
+шаблон уходит `art.model_copy(update={"content": content})`, и объекты реестра
+остаются неизменяемыми.
 
 ### 2.6 Шаблонное наследование и макросы
 
@@ -228,7 +232,7 @@ def render_article(name_file: str, name_dir: str = get_path_dir()) -> str: ...
 | Механизм | Где | Что валидирует | Поведение при ошибке |
 |---|---|---|---|
 | WTForms | `../flaskblog/users/forms_users.py` | пользовательский ввод форм: обязательность, длина, формат e-mail, совпадение паролей, уникальность в БД | ошибка в `form.errors`, страница перерисовывается |
-| Pydantic | `flaskblog/new_articles/schema_art.py` | форма объектов статей — контент разработчика, не пользователя | `ValidationError` при импорте модуля |
+| Pydantic | `flaskblog/new_articles/schema_art.py` | форма объектов статей — контент разработчика, не пользователя | `ValidationError` при перечитывании `articles.yaml`; сайт продолжает работать на последней рабочей версии, ошибка показывается в `/art_manage` и логе |
 
 Pydantic здесь не защищает границу системы: он работает с данными, зашитыми в код.
 Наоборот, поступающие извне `<author>` и `<art_id>` не проверяются на прикладном уровне
@@ -239,7 +243,7 @@ Pydantic здесь не защищает границу системы: он р
 ### 3.1 Чтение статьи (основной сценарий, БД не участвует)
 
 ```
-GET /art/Max/1
+GET /art/Max/1787932544
   │
   ├─ nginx (Docker): TLS, proxy_pass → 172.20.1.50:5000
   ├─ gunicorn/waitress → WSGI-вызов приложения
@@ -247,15 +251,15 @@ GET /art/Max/1
   ├─ Werkzeug: сопоставление правила /art/<string:author>/<int:art_id>
   │    <int:art_id> — единственная фактическая проверка типа
   │
-  ├─ art_main.art_author(author, art_id)          routesArticles.py
+  ├─ art_main.art_author(author, art_id)          routes_articles.py
   │    ├─ logFC.info(...)                          → stdout + файл лога
-  │    ├─ art = art_dict_file.get(art_id)          словарь в памяти
-  │    │    неизвестный id → abort(404) (исправлено заданием 001, было 500)
+  │    ├─ art = get_art(art_id)                    реестр в памяти (mtime-кэш)
+  │    │    неизвестный/неполный id или нет файла → abort(404) (исправлено заданием 001, было 500)
   │    ├─ content = render_article(art.file_name)  ЧТЕНИЕ ДИСКА, каждый запрос
   │    │    ├─ .html → содержимое без преобразования
   │    │    └─ .md/.markdown → markdown(..., fenced_code + tables)
   │    │    каталог зафиксирован при импорте (см. 01 §4)
-  │    └─ art_for_template = art.model_copy(...)    копия, общий объект не мутируется
+  │    └─ art_for_template = art.model_copy(...)    копия, объект реестра не мутируется
   │
   ├─ render_template('new_art/art_author.html', lang=art.lang, art=art)
   │    layout.html → _head/_header/_scripts + footer_new
@@ -273,7 +277,7 @@ Flask-Login из cookie сессии — и вот он-то один SELECT в 
 ```
 POST /login  (email, password, remember, csrf_token)
   │
-  ├─ users.login()                                 routesUsers.py
+  ├─ users.login()                                 routes_users.py
   ├─ current_user.is_authenticated → если да, редирект на art_main.art_home
   ├─ LoginForm() ← request.form
   ├─ form.validate_on_submit()
@@ -296,7 +300,7 @@ POST /login  (email, password, remember, csrf_token)
 POST /account  (multipart: username, email, picture)
   ├─ @login_required → нет сессии: редирект на users.login + flash 'info'
   ├─ UpdateAccountForm(): FileAllowed(['jpg','png']) — проверка ПО ИМЕНИ файла
-  ├─ save_picture(form.picture.data)                routesUsers.py
+  ├─ save_picture(form.picture.data)                routes_users.py
   │    ├─ имя: secrets.token_hex(8) + расширение из имени, присланного клиентом
   │    ├─ Image.open(...).thumbnail((125,125))      Pillow, синхронно, в воркере
   │    └─ i.save(current_app.root_path/static/profile_pics/<name>)
@@ -314,16 +318,17 @@ POST /account  (multipart: username, email, picture)
 |---|---|---|---|
 | Сессия пользователя | cookie на клиенте | подписанный cookie Flask + Flask-Login | server-side хранилища сессий нет |
 | Постоянные данные | СУБД по `DATABASE_URI` (целевая PostgreSQL, фактически SQLite) | Flask-SQLAlchemy | схема создаётся только через `/createDB` |
-| Индекс статей | память процесса | `art_dict_file`, заполняется при импорте | изменение состава статей требует перезапуска |
+| Индекс статей | память процесса | кэш `get_articles()` (mtime/size), перечитывается при изменении `articles.yaml` | перезапуск не нужен; при ошибке YAML — последняя рабочая версия |
 | Тело статьи | файловая система | `render_article()` на каждый запрос | HTML возвращается как есть; Markdown преобразуется в HTML; кэша нет |
 | Аватары | локальный диск контейнера/хоста | `static/profile_pics/` | НЕ в volume → теряются при пересборке контейнера |
 | Тема оформления | `localStorage` браузера + `data-bs-theme` на `<html>` | `static/art_css/scripts.js` | на сервер не передаётся; восстановление инлайн-скриптом в `<head>` |
 | Тема подсветки кода | `localStorage['hljs-theme']` | там же | 15 тёмных тем hljs, селектор в шапке |
 | Flash-сообщения | сессия | `flash()` / `get_flashed_messages()` | видны на всех страницах — единая база `layout.html` |
 
-Приложение почти stateless на уровне процесса — кроме разделяемого `art_dict_file`.
-Это делает горизонтальное масштабирование возможным без внешнего session-store,
-но каталог `static/profile_pics/` придётся вынести в общее хранилище.
+Приложение почти stateless на уровне процесса — кроме кэша реестра статей
+(`get_articles()`), который в multi-worker-конфигурации обновляется каждым воркером
+независимо. Это делает горизонтальное масштабирование возможным без внешнего
+session-store, но каталог `static/profile_pics/` придётся вынести в общее хранилище.
 
 ### 4.2 Кэширование
 

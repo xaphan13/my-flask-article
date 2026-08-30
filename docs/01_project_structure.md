@@ -105,30 +105,34 @@ flask-blog-1/                       корень проекта — ВСЕГДА
     │                               всем .py). Альтернативный dictConfig с логгерами
     │                               app2/app3/werkzeug/sqlalchemy
     │
-    ├── main/routesMain.py          (38) блюпринт main: / и /home → редирект на art_home;
+    ├── main/routes_main.py        (38) блюпринт main: / и /home → редирект на art_home;
     │                               /about (рендер + 5 демонстрационных flash);
     │                               /createDB[/<post_id>] → db.create_all() БЕЗ авторизации
     │
     ├── users/
-    │   ├── routesUsers.py          (101) блюпринт users: register, login, logout, account.
+    │   ├── routes_users.py        (101) блюпринт users: register, login, logout, account.
     │   │                           Плюс save_picture() — ресайз аватара до 125×125 через
     │   │                           Pillow и запись в static/profile_pics со случайным
     │   │                           именем secrets.token_hex(8)
-    │   └── formsUsers.py           (50) WTForms-слой: LoginForm, RegistrationForm,
+    │   └── forms_users.py         (50) WTForms-слой: LoginForm, RegistrationForm,
     │                               UpdateAccountForm. Валидаторы уникальности
     │                               validate_username/validate_email обращаются к БД
     │
     ├── new_articles/
-    │   ├── routesArticles.py       (28) блюпринт art_main: /art_home (список) и
-    │   │                           /art/<author>/<art_id> (чтение и рендер файла)
-    │   ├── schema_art.py           (97) контракт статей: Pydantic-модель ArticleLang;
-    │   │                           загрузка articles.yaml; art_files + art_dict_file;
-    │   │                           read_html() и render_article() с преобразованием
-    │   │                           Markdown; ниже — DTO для несуществующего API
-    │   ├── articles.yaml           метаданные пяти статей и имена файлов контента
-    │   └── data_ex.py              (34) МЁРТВЫЙ модуль: классы ArticleEx, ArticleLang22,
+    │   ├── routes_articles.py    (192) блюпринт art_main: /art_home (список),
+    │   │                          /art/<author>/<art_id> (чтение и рендер файла),
+    │   │                          /art_manage + два POST-обработчика (реестр статей,
+    │   │                          @login_required); _is_complete/_allocate_art_id
+    │   ├── schema_art.py         (210) контракт статей: Pydantic-модель ArticleLang;
+    │   │                          get_articles()/get_art()/save_articles() — реестр
+    │   │                          articles.yaml с mtime-кэшем и атомарной записью;
+    │   │                          read_html() и render_article() с преобразованием
+    │   │                          Markdown; scan_content_art() (.md/.markdown);
+    │   │                          ниже — DTO для несуществующего API
+    │   ├── articles.yaml         метаданные статей и имена файлов контента
+    │   └── data_ex.py            (34) МЁРТВЫЙ модуль: классы ArticleEx, ArticleLang22,
     │                               список art_list. Упоминается только в
-    │                               закомментированной строке routesMain.py:16
+    │                               закомментированной строке routes_main.py
     │
     ├── errors/handlers.py          (18) блюпринт errors: app_errorhandler на 403/404/500.
     │                               Обработчики app-wide, не ограничены блюпринтом
@@ -257,9 +261,11 @@ jQuery и Popper удалены при миграции на Bootstrap 5 (зад
    `TypeError` из `os.path.exists(None)` ещё на импорте. `ConfigLogger.__createLogDir`
    использует `os.mkdir`, а не `os.makedirs`, поэтому вложенный путь вида `./log_app/flask`
    даст `FileNotFoundError`.
-4. **`DATABASE_URI` — единственный источник DSN.** Переменные `DB_HOST`/`DB_PORT`/`DB_USER`
-   влияют только на docker compose. Без `DATABASE_URI` приложение падает в `db.init_app(app)`
-   с `RuntimeError: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set.`
+4. **`DATABASE_URI` — основной источник DSN.** Если она не задана, `config.py` собирает
+   DSN из `DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_NAME` (эти же переменные
+   использует docker compose). Если не задано ни то, ни другое полностью — приложение
+   падает в `db.init_app(app)` с `RuntimeError: Either 'SQLALCHEMY_DATABASE_URI' or
+   'SQLALCHEMY_BINDS' must be set.`
 
 ## 5. Метрики
 

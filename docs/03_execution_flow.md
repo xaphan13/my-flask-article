@@ -80,10 +80,11 @@ create_app(config_class=Config, debug_mode=False)
   └─ return app
 ```
 
-Побочный эффект импорта блюпринтов: при импорте `routesArticles` подтягивается
-`schema_art`, который на уровне модуля создаёт все объекты `ArticleLang`, словарь
-`art_dict_file` и **вычисляет `get_path_dir()`** как значение по
-умолчанию у `read_html`. Каталог статей фиксируется именно здесь и навсегда.
+Побочный эффект импорта блюпринтов: при импорте `routes_articles` подтягивается
+`schema_art`, который **вычисляет `get_path_dir()`** как значение по умолчанию у
+`read_html`/`render_article`. Каталог статей фиксируется именно здесь и навсегда.
+Сам реестр `articles.yaml` на импорте не читается: `get_articles()` лениво загружает
+его при первом обращении и затем перечитывает по изменению `mtime`/`size` файла.
 
 Ни `before_request`, ни `after_request`, ни `teardown_appcontext` в проекте не
 регистрируются. Единственный teardown — встроенный в Flask-SQLAlchemy: он закрывает
@@ -109,19 +110,22 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 
 ### 2.1 Полная карта маршрутов
 
-Получено из `app.url_map` — 13 правил, из них 12 прикладных:
+Получено из `app.url_map` — 16 правил, из них 15 прикладных:
 
 | URL | Endpoint | Методы | Авторизация | Обработчик |
 |---|---|---|---|---|
-| `/` | `main.home` | GET | нет | `main/routesMain.py` |
+| `/` | `main.home` | GET | нет | `main/routes_main.py` |
 | `/home` | `main.home` | GET | нет | тот же |
-| `/about` | `main.about` | GET | нет | `main/routesMain.py` |
-| `/createDB` | `main.createDB` | GET | **нет** ⚠ | `main/routesMain.py` |
+| `/about` | `main.about` | GET | нет | `main/routes_main.py` |
+| `/createDB` | `main.createDB` | GET | **нет** ⚠ | `main/routes_main.py` |
 | `/createDB/` | `main.createDB` | GET | **нет** ⚠ | тот же |
 | `/createDB/<int:post_id>` | `main.createDB` | GET | **нет** ⚠ | тот же |
-| `/art_home` | `art_main.art_home` | GET | нет | `new_articles/routesArticles.py` |
+| `/art_home` | `art_main.art_home` | GET | нет | `new_articles/routes_articles.py` |
 | `/art/<string:author>/<int:art_id>` | `art_main.art_author` | GET | нет | там же |
-| `/register` | `users.register` | GET, POST | нет | `users/routesUsers.py` |
+| `/art_manage` | `art_main.art_manage` | GET | `@login_required` | там же |
+| `/art_manage/add_all` | `art_main.art_manage_add_all` | POST | `@login_required` | там же |
+| `/art_manage/meta` | `art_main.art_manage_meta` | POST | `@login_required` | там же |
+| `/register` | `users.register` | GET, POST | нет | `users/routes_users.py` |
 | `/login` | `users.login` | GET, POST | нет | там же |
 | `/logout` | `users.logout` | GET | нет | там же |
 | `/account` | `users.account` | GET, POST | `@login_required` | там же |
@@ -133,8 +137,8 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 /                    → 302 → /art_home
 /art_home            → 200
 /about               → 200
-/art/Max/1           → 200
-/art/anybody-else/1  → 200   ← <author> не проверяется, любая строка даёт ту же статью
+/art/Max/1787932544  → 200
+/art/any-other/1787932544 → 200   ← <author> не проверяется, любая строка даёт ту же статью
 /art/Max/999         → 404   ← исправлено заданием 001 (было 500, KeyError)
 /login               → 200
 /nope                → 404
@@ -166,23 +170,30 @@ Graceful shutdown не реализован: обработчиков `SIGTERM`/
 ```python
 @art_main.route("/art_home")
 def art_home():
-    title_list = [x.dict(exclude_unset=True, exclude={"content"}) for x in art_dict_file.values()]
-    logFC.info(f"new_art : '/art' = {title_list}")
+    title_list = [
+        art.model_dump(exclude={"content"})
+        for art in get_articles()
+        if _is_complete(art)
+    ]
+    logFC.info(f"new_art : '/art_home' = {title_list}")
     return render_template("new_art/art_home.html", title_list=title_list)
 ```
 
-1. Итерация по `art_dict_file` — словарю, собранному при импорте `schema_art`.
+1. `get_articles()` возвращает текущий реестр из `articles.yaml` (mtime-кэш: перечитывается
+   при изменении файла, без перезапуска процесса).
 2. `model_dump(exclude={"content"})` сериализует каждую `ArticleLang` в `dict`,
-    убирая тело статьи. Фактический результат (проверено):
+   убирая тело статьи. Фактический результат (проверено):
    `{'author', 'lang', 'art_id', 'title', 'file_name'}`. (Ранее использовался
    `.dict()` — API Pydantic v1 с предупреждением `PydanticDeprecatedSince20`;
-   переведён на `model_dump()`.)
-3. Весь список логируется на уровне INFO — то есть содержимое индекса пишется в файл
+   переведён на `model_dump()` в задании 002.)
+3. Фильтр `_is_complete(art)` пропускает записи с пустыми `author`/`lang`/`title` —
+   неполные записи не показываются.
+4. Весь список логируется на уровне INFO — то есть содержимое индекса пишется в файл
    при каждом заходе на главную.
-4. Шаблон `new_art/art_home.html` строит ссылки через
+5. Шаблон `new_art/art_home.html` строит ссылки через
    `url_for('art_main.art_author', author=art.author, art_id=art.art_id)`.
 
-Обращений к диску и к БД в этом обработчике нет.
+Обращений к диску (кроме возможного перечитывания YAML) и к БД в этом обработчике нет.
 
 ### 3.2 Чтение статьи — `art_author`
 
@@ -216,7 +227,7 @@ def art_author(author, art_id):
    возвращаются без преобразования. Кэша нет — чтение и Markdown-рендеринг выполняются на
    каждый запрос.
 4. `art_for_template = art.model_copy(update={"content": content})` — в шаблон уходит
-   **копия** записи: общие объекты `art_dict_file` не мутируются (ранее `art.content =`
+   **копия** записи: объекты реестра из `get_articles()` не мутируются (ранее `art.content =`
    менял модуль-level состояние; исправлено в задании 002).
 5. Шаблон выводит `{{ body_html|safe }}` — экранирование отключено сознательно. Для
    HTML-файлов это доверенная разметка из репозитория; для Markdown это HTML, созданный

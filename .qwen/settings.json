@@ -17,7 +17,8 @@
       "Bash(ls *)",
       "Bash(mkdir *)",
       "Bash(node *)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(uv *)"
     ]
   },
   "$version": 4

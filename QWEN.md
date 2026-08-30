@@ -12,9 +12,9 @@
 
 1. **Пользователи и посты в БД** — `User` / `Post` через Flask-SQLAlchemy на PostgreSQL,
    с регистрацией, входом и загрузкой аватара.
-2. **Статьи из файлов** — технические статьи хранятся как статические Jinja-HTML файлы
-   в `flaskblog/templates/content_art/` и описываются Pydantic-моделями в
-   `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта
+2. **Статьи из файлов** — технические статьи хранятся как Markdown-файлы
+   (`.md`/`.markdown`) в `flaskblog/templates/content_art/` и описываются Pydantic-моделями
+   в `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта
    (`/` перенаправляет на `/art_home`).
 
 **Стек**
@@ -28,6 +28,8 @@
 | Аутентификация | Flask-Login + Flask-Bcrypt |
 | Формы | Flask-WTF / WTForms (+ `email-validator`) |
 | Валидация/схемы | Pydantic 2.12 |
+| Фронтенд | Bootstrap 5.3.8 + highlight.js 11.12.0 с cdn.jsdelivr.net (SRI); темы `data-bs-theme` |
+| Рендер статей | `markdown` (fenced_code, tables), YAML-реестр через PyYAML |
 | WSGI-сервер | `waitress` локально, `gunicorn` в Docker |
 | Обратный прокси | nginx с TLS (только в Docker) |
 | Изображения | Pillow (миниатюры аватаров) |
@@ -43,9 +45,9 @@
 
 | Блюпринт | Модуль | Маршруты |
 |---|---|---|
-| `art_main` | `new_articles/routes_articles.py` | `/art_home`, `/art/<author>/<art_id>` |
-| `main` | `main/routesMain.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
-| `users` | `users/routesUsers.py` | `/register`, `/login`, `/logout`, `/account` |
+| `art_main` | `new_articles/routes_articles.py` | `/art_home`, `/art/<author>/<art_id>`, `/art_manage` (+ POST `/art_manage/add_all`, `/art_manage/meta`, оба `@login_required`) |
+| `main` | `main/routes_main.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
+| `users` | `users/routes_users.py` | `/register`, `/login`, `/logout`, `/account` |
 | `errors` | `errors/handlers.py` | обработчики 403 / 404 / 500 на уровне приложения |
 
 ```
@@ -55,8 +57,10 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
 ├── local.env                   локальные переменные окружения — НЕ в git, создать вручную
 ├── compose-nginx-db.yml        app_flask + nginx + db + pgadmin
 ├── docker_manager.sh           хелперы net-create | cont-stop
+├── git_manager.sh              хелперы br | st | brst | commit
 ├── tasks/                      задания команды: current/ — живое, NNN-<slug>/ — архив с отчётами (ведёшь ты)
-├── docs/setup-and-run.md       подробный отчёт по настройке (рус.) — читать первым
+├── docs/                       подробная документация (рус.): setup-and-run.md, 01–05, frontend/
+│                               (setup-and-run.md — читать первым)
 ├── nginx/                      Docker-nginx, nginx.conf, cert/ (сертификатов нет в git)
 └── flaskblog/                  пакет приложения
     ├── __init__.py             create_app(), db, bcrypt, login_manager
@@ -67,7 +71,7 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
     ├── dock_flask.env          env контейнера — НЕ в git, создать вручную
     ├── logger/config_log.py    ConfigLogger + dictConfig
     ├── main/ users/ new_articles/ errors/   блюпринты
-    ├── templates/ static/
+    ├── templates/ static/      единый layout.html, includes/; стили base.css + scripts.js
     └── log/                    вывод логов (относительно cwd, см. «Грабли» в AGENTS.md)
 ```
 
@@ -84,6 +88,7 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
 | [`docs/03_execution_flow.md`](docs/03_execution_flow.md) | логика работы кода: жизненный цикл, маршруты, ключевые процессы, логирование |
 | [`docs/04_code_quality.md`](docs/04_code_quality.md) | оценка качества кодовой базы, дефекты по критичности |
 | [`docs/05_optimization_roadmap.md`](docs/05_optimization_roadmap.md) | предложения по развитию и рефакторингу |
+| [`docs/frontend/`](docs/frontend/) | устройство фронтенда до/после миграции на Bootstrap 5 (задания 003/004): разбор, оценка современности, план улучшений |
 
 ## Индекс кодовой базы
 
@@ -114,7 +119,10 @@ LOG_DIR=./log
 LOG_FILE=FLASK.log
 ```
 
-`DB_USER` / `DB_PASSWORD` / `DB_NAME` использует **docker compose**, а не строка подключения.
+Если `DATABASE_URI` не задан, `config.py` собирает DSN из частей `DB_USER`/`DB_PASSWORD`/
+`DB_HOST`/`DB_PORT`/`DB_NAME`; `DB_USER`/`DB_PASSWORD`/`DB_NAME` также использует
+docker compose. Для быстрой проверки без Postgres подойдёт `DATABASE_URI=sqlite:///site.db`
+(относительно `instance/`).
 
 ### Локальный запуск
 
@@ -148,11 +156,11 @@ Ruff и black **не** объявлены в зависимостях — уст
 Тестов нет, поэтому изменения проверяются запуском самого приложения:
 
 ```bash
-python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # ожидается 13
+python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # ожидается 16
 python -m flaskblog.run                                                                            # затем curl /
 ```
 
-13 правил = 12 маршрутов приложения + встроенный `static` от Flask.
+16 правил = 15 маршрутов приложения (включая три `/art_manage*`) + встроенный `static` от Flask.
 
 Не утверждайте, что изменение проверено, без фактического запуска. Если проверить
 невозможно — сообщите об этом прямо.

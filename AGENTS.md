@@ -13,9 +13,9 @@
 
 1. **Пользователи и посты в БД** — `User` / `Post` через Flask-SQLAlchemy на PostgreSQL,
    с регистрацией, входом и загрузкой аватара.
-2. **Статьи из файлов** — технические статьи хранятся как статические Jinja-HTML файлы
-   в `flaskblog/templates/content_art/` и описываются Pydantic-моделями в
-   `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта
+2. **Статьи из файлов** — технические статьи хранятся как Markdown-файлы
+   (`.md`/`.markdown`) в `flaskblog/templates/content_art/` и описываются Pydantic-моделями
+   в `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта
    (`/` перенаправляет на `/art_home`).
 
 **Стек**
@@ -29,6 +29,8 @@
 | Аутентификация | Flask-Login + Flask-Bcrypt |
 | Формы | Flask-WTF / WTForms (+ `email-validator`) |
 | Валидация/схемы | Pydantic 2.12 |
+| Фронтенд | Bootstrap 5.3.8 + highlight.js 11.12.0 с cdn.jsdelivr.net (SRI); темы `data-bs-theme` |
+| Рендер статей | `markdown` (fenced_code, tables), YAML-реестр через PyYAML |
 | WSGI-сервер | `waitress` локально, `gunicorn` в Docker |
 | Обратный прокси | nginx с TLS (только в Docker) |
 | Изображения | Pillow (миниатюры аватаров) |
@@ -44,9 +46,9 @@
 
 | Бьюпринт | Модуль | Маршруты |
 |---|---|---|
-| `art_main` | `new_articles/routes_articles.py` | `/art_home`, `/art/<author>/<art_id>` |
-| `main` | `main/routesMain.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
-| `users` | `users/routesUsers.py` | `/register`, `/login`, `/logout`, `/account` |
+| `art_main` | `new_articles/routes_articles.py` | `/art_home`, `/art/<author>/<art_id>`, `/art_manage` (+ POST `/art_manage/add_all`, `/art_manage/meta`, оба `@login_required`) |
+| `main` | `main/routes_main.py` | `/`, `/home`, `/about`, `/createDB[/<post_id>]` |
+| `users` | `users/routes_users.py` | `/register`, `/login`, `/logout`, `/account` |
 | `errors` | `errors/handlers.py` | обработчики 403 / 404 / 500 на уровне приложения |
 
 ```
@@ -58,7 +60,8 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
 ├── docker_manager.sh           хелперы net-create | cont-stop
 ├── git_manager.sh              хелперы br | st | brst | commit
 ├── tasks/                      задания команды: current/ — живое, NNN-<slug>/ — архив с отчётами (ведёт оркестратор)
-├── docs/setup-and-run.md       подробный отчёт по настройке (рус.) — читать первым
+├── docs/                       подробная документация (рус.): setup-and-run.md, 01–05, frontend/
+│                               (setup-and-run.md — читать первым)
 ├── nginx/                      Docker-nginx, nginx.conf, cert/ (сертификатов нет в git)
 └── flaskblog/                  пакет приложения
     ├── __init__.py             create_app(), db, bcrypt, login_manager
@@ -69,7 +72,7 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
     ├── dock_flask.env          env контейнера — НЕ в git, создать вручную
     ├── logger/config_log.py    ConfigLogger + dictConfig
     ├── main/ users/ new_articles/ errors/   блюпринты
-    ├── templates/ static/
+    ├── templates/ static/      единый layout.html, includes/; стили base.css + scripts.js
     └── log/                    вывод логов (относительно cwd, см. «Грабли»)
 ```
 
@@ -86,6 +89,7 @@ flask-blog-1/                   <- корень проекта; ВСЕГДА cwd
 | [`docs/03_execution_flow.md`](docs/03_execution_flow.md) | логика работы кода: жизненный цикл, маршруты, ключевые процессы, логирование |
 | [`docs/04_code_quality.md`](docs/04_code_quality.md) | оценка качества кодовой базы, дефекты по критичности |
 | [`docs/05_optimization_roadmap.md`](docs/05_optimization_roadmap.md) | предложения по развитию и рефакторингу |
+| [`docs/frontend/`](docs/frontend/) | устройство фронтенда до/после миграции на Bootstrap 5 (задания 003/004): разбор, оценка современности, план улучшений |
 
 ## Индекс кодовой базы
 
@@ -116,7 +120,10 @@ LOG_DIR=./log
 LOG_FILE=FLASK.log
 ```
 
-`DB_USER` / `DB_PASSWORD` / `DB_NAME` использует **docker compose**, а не строка подключения.
+Если `DATABASE_URI` не задан, `config.py` собирает DSN из частей `DB_USER`/`DB_PASSWORD`/
+`DB_HOST`/`DB_PORT`/`DB_NAME`; `DB_USER`/`DB_PASSWORD`/`DB_NAME` также использует
+docker compose. Для быстрой проверки без Postgres подойдёт `DATABASE_URI=sqlite:///site.db`
+(относительно `instance/`).
 
 ### Локальный запуск
 
@@ -150,11 +157,11 @@ Ruff и black **не** объявлены в зависимостях — уст
 Тестов нет, поэтому изменения проверяются запуском самого приложения:
 
 ```bash
-python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # ожидается 13
+python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # ожидается 16
 python -m flaskblog.run                                                                            # затем curl /
 ```
 
-13 правил = 12 маршрутов приложения + встроенный `static` от Flask.
+16 правил = 15 маршрутов приложения (включая три `/art_manage*`) + встроенный `static` от Flask.
 
 Не утверждайте, что изменение проверено, без фактического запуска. Если проверить
 невозможно — сообщите об этом прямо.
@@ -194,19 +201,22 @@ from flaskblog import db
 
 ### Шаблоны
 
-Две независимые иерархии layout'ов — выбирайте правильный родитель:
+Единая база `layout.html` для всех страниц (после миграции на Bootstrap 5, задание 003):
+`<html lang="ru" data-bs-theme="dark">`, включает `includes/_head.html` (Bootstrap 5.3.8
+CSS + темы highlight.js с jsdelivr/SRI, `meta description`, инлайн-восстановление темы
+до стилей), `includes/_header.html` (navbar BS5 с тогглером мобильного меню, русский
+интерфейс, переключатель темы), `includes/_flash_msg.html` и `includes/_scripts.html`
+(Bootstrap 5 bundle + highlight.js 11.12.0). Второй базы `new_art/art_base.html` больше
+нет. Макросы: `includes/_footer_macro.html::footer_new(current_user)` и
+`includes/_form_macro.html` (поля форм с ошибками).
 
-- `layout.html` — страницы аутентификации и информационные (`about`, `login`, `register`,
-  `account`, `errors/*`). Подключает `includes/_flash_msg.html`, поэтому flash-сообщения
-  отображаются только здесь.
-- `new_art/art_base.html` — страницы статей (`art_home`, `art_author`), с боковым меню и
-  собственными партиалами `new_art/includes/_art_*.html`. Flash-сообщения **не** выводит.
-
-Оба используют общий макрос футера
-`includes/_footer_macro.html::footer_new(current_user)`. Тела статей лежат в
-`templates/content_art/artN.html`, читаются во время запроса функцией `read_html()` и
-подставляются через `art.content`. Статические файлы — в `static/art_css/`
-(`base.css`, `light-theme.css`, `dark-theme.css`, `scripts.js`) и `static/profile_pics/`.
+- Тема тёмная/светлая — `data-bs-theme` на `<html>` + CSS-переменные в едином
+  `static/art_css/base.css` (файлы `dark-theme.css`/`light-theme.css` удалены);
+  переключение через `scripts.js` + `localStorage['theme']`, без inline-обработчиков.
+- Тела статей лежат в `templates/content_art/` (`.md`/`.markdown`), читаются во время
+  запроса `read_html()`/`render_article()` и подставляются через `art.content|safe`.
+- Скриншоты обеих тем для проверок делаются playwright-скриптом с
+  `localStorage['theme']` (см. `.qwen/agents/qa.md`).
 
 ### Модель данных и схемы
 
@@ -214,22 +224,30 @@ from flaskblog import db
   `Mapped[]`/`mapped_column` из 2.0. `User.__init__` переопределён с ключевыми
   аргументами по умолчанию.
 - Поля `ArticleLang`: `author`, `lang`, `art_id: int`, `title`, `file_name`, `content`.
-- Метаданные статей хранятся в `new_articles/articles.yaml`; для добавления статьи нужно
-  добавить туда запись и создать соответствующий файл `.html`, `.md` или `.markdown`
-  в `templates/content_art/`. Словарь `art_dict_file` загружается из YAML и
-  индексирован по `art_id`; именно его ищет маршрут `/art/<author>/<art_id>`.
-  (Legacy-пара `articles`/`articles_dict` и `arts_content.py` удалены 2026-08-28;
-  ниже в `schema_art.py` остались только DTO для несуществующего API — их не трогайте
-  без отдельной просьбы.)
+- Метаданные статей хранятся в `new_articles/articles.yaml` (ключ `articles:`, записи
+  `author/lang/art_id/title/file_name`). Реестр читается `get_articles()` и
+  перечитывается с диска автоматически при изменении mtime файла — перезапуск приложения
+  не нужен. Записи можно вести и через UI: `/art_manage` (`@login_required`) показывает
+  три секции (реестр, файлы без записи, записи без файла) и имеет POST-формы
+  «добавить все новые файлы» (`/art_manage/add_all`) и «добавить/обновить запись»
+  (`/art_manage/meta`); запись атомарная, через временный файл.
+- Для добавления статьи вручную: файл `.md`/`.markdown` в `templates/content_art/` +
+  запись в `articles.yaml` с уникальным `art_id` (или кнопка в `/art_manage`).
+  В `/art/<author>/<art_id>` статью ищет `get_art(art_id)`; неполные записи (пустые
+  `author`/`lang`/`title`) и записи без файла на диске дают 404.
+  (Legacy-пара `articles`/`articles_dict`, `arts_content.py`, словарь `art_dict_file`
+  удалены 2026-08-28; ниже в `schema_art.py` остались только DTO для несуществующего
+  API — их не трогайте без отдельной просьбы.)
 
 ## Грабли — сверьтесь с этим списком перед отладкой
 
 ### Конфигурация и запуск
 
-- **`DATABASE_URI` — единственный источник DSN.** Сборка строки
-  `f"postgresql+psycopg2://..."` из частей `DB_*` закомментирована в `config.py`.
-  Установка только `DB_HOST`/`DB_PORT` ничего не даёт; отсутствие `DATABASE_URI`
-  приводит к падению на `db.init_app(app)`.
+- **`DATABASE_URI` — основной источник DSN.** Если она не задана, `config.py` собирает
+  строку `f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"`
+  из отдельных `DB_*`. Отсутствие и `DATABASE_URI`, и полного набора `DB_*` приводит
+  к падению на `db.init_app(app)`. Для локальной проверки допускается
+  `DATABASE_URI=sqlite:///site.db` (файл в `instance/`).
 - **`LOG_DIR` обязателен.** Если он не задан, `Config.LOG_DIR is None`, и
   `os.path.exists(None)` бросает `TypeError` на *импорте* `flaskblog`, а не внутри
   `create_app()` — потому что логгер инициализируется до объявления `db`/`bcrypt`.
@@ -255,12 +273,17 @@ from flaskblog import db
 
 - **`author` в `/art/<author>/<art_id>` декоративен.** `art_author` ищет статью только по
   `art_id`, поэтому любая строка автора вернёт одну и ту же статью.
-- **Неизвестный `art_id` возвращает 404.** `art_author` вызывает `abort(404)`, если
-  `art_id` отсутствует в `art_dict_file` (до задания 001 было 500 с `KeyError`;
+- **Неизвестный или неполный `art_id` возвращает 404.** `art_author` вызывает `abort(404)`,
+  если `art_id` отсутствует в реестре, запись неполная (пустые `author`/`lang`/`title`)
+  или файла нет на диске (до задания 001 было 500 с `KeyError`;
   см. `tasks/001-404-missing-article/REQUIREMENTS.md`).
-- **`art.content = content` изменяет объект `ArticleLang` уровня модуля**, общий для всех
-  запросов. Содержимое перечитывается с диска на каждом запросе, поэтому сейчас это
-  безвредно — но не добавляйте в эти объекты состояние, рассчитывая на изоляцию по запросам.
+- **Реестр `articles.yaml` перечитывается по mtime.** `get_articles()` кэширует список
+  записей и сравнивает `(st_mtime_ns, st_size)`; правка YAML подхватывается следующим
+  запросом без перезапуска. Битый YAML не роняет сайт: показывается последняя рабочая
+  версия, а ошибка — в `/art_manage` (`yaml_error`) и в логе.
+- **`scan_content_art()` видит только `.md`/`.markdown`.** HTML-файлы в `content_art/`
+  в список не попадают; `render_article()` по-прежнему отдаст `.html` без преобразования,
+  если на него ссылается `file_name`, но UI управления ими не показывает.
 
 ### База данных
 
@@ -274,11 +297,12 @@ from flaskblog import db
 
 Не «исправляйте» их без отдельной просьбы, но помните, что они дают предупреждения:
 
-- `art_home` вызывает `x.dict(...)` — API Pydantic v1, объявленный устаревшим в
-  Pydantic 2.12 (замена — `model_dump()`).
 - `models.py` использует `datetime.utcnow` как значение по умолчанию для колонки —
-  устарело в Python 3.12.
-- `load_user` использует `User.query.get()` — legacy-API запросов SQLAlchemy.
+  устарело в Python 3.12 (замена — `datetime.now(UTC)`).
+- `load_user` использует `User.query.get()` — legacy-API запросов SQLAlchemy
+  (замена — `db.session.get(User, ...)`).
+- `x.dict()` в `art_home` и мутация `art.content` исправлены заданием 002
+  (`model_dump()`, `model_copy`) — больше не актуальны.
 
 ### Docker
 
@@ -292,11 +316,12 @@ from flaskblog import db
 
 ## Git
 
-Ветка на момент написания: `alphaFlask`. Заголовки коммитов короткие и в нижнем регистре
-(`new 26 start`, `restore theme`, `added psycopg2`). Держитесь той же лаконичности.
+Ветка на момент обновления: `new-frontend` (ранее работа шла в `alphaFlask` и
+`agents-new`). Заголовки коммитов короткие и в нижнем регистре (`new 26 start`,
+`new frontend 5.3.8`, `update docs`). Держитесь той же лаконичности.
 Учтите, что `log/`, `instance/`, `pg_db/`, `*.env`, `.idea/` и сертификаты nginx находятся
 в `.gitignore` — никогда не добавляйте их. Индексируйте только файлы, относящиеся к
-изменению; сейчас в рабочем дереве есть несколько модифицированных файлов.
+изменению; проверяйте `git status` перед индексированием.
 `git_manager.sh` оборачивает частые команды (`br`, `st`, `brst`, `commit`, `push_two`).
 
 ---
@@ -352,7 +377,7 @@ from flaskblog import db
 | Агент | Зона (можно редактировать) | Чем проверяет изменения | Особые запреты |
 |---|---|---|---|
 | frontend-dev | `flaskblog/templates/`, `flaskblog/static/` | запуск из корня: `python -m flaskblog.run`; просмотр изменённых страниц; скриншот в `tasks/current/screenshots/` | Python-модули и `articles.yaml` — зона backend-dev |
-| backend-dev | Python-модули `flaskblog/`, `flaskblog/new_articles/articles.yaml` | `uv run ruff check .`; `python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"` (ожидается 13); curl изменённых маршрутов | `templates/`, `static/`; устаревшие API из раздела выше |
+| backend-dev | Python-модули `flaskblog/`, `flaskblog/new_articles/articles.yaml` | `uv run ruff check .`; `python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"` (ожидается 16); curl изменённых маршрутов | `templates/`, `static/`; устаревшие API из раздела выше |
 | qa | `tasks/current/e2e/`, `tasks/current/DEFECTS.md`, `tasks/current/screenshots/` | curl-сценарии из критериев успеха текущего задания; регресс: `/`, `/art_home`, `/art/<author>/<art_id>`, `/about` | любой код продукта |
 | adversary | `tasks/current/ADVERSARIAL_REVIEW.md`, `tasks/current/screenshots/` | curl по запущенному приложению; логи приложения | всё, кроме своих файлов |
 

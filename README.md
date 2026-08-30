@@ -7,8 +7,8 @@
 
 Сайт намеренно совмещает **две независимые модели контента**:
 
-1. **Статьи из файлов** — технические статьи хранятся как статические Jinja-HTML файлы в
-   `flaskblog/templates/content_art/` и описываются Pydantic-моделями в
+1. **Статьи из файлов** — технические статьи хранятся как Markdown-файлы (`.md`/`.markdown`)
+   в `flaskblog/templates/content_art/` и описываются Pydantic-моделями в
    `flaskblog/new_articles/schema_art.py`. Именно это — основной контент сайта:
    `/` перенаправляет на `/art_home`.
 2. **Пользователи и посты в БД** — `User` / `Post` через Flask-SQLAlchemy на PostgreSQL,
@@ -57,12 +57,16 @@ Qwen Code в корне проекта. Главная сессия (glm-5.3) п
 
 ## Возможности
 
-- Список статей и страницы отдельных статей, собираемые из статических HTML-фрагментов
-  (темы по Python и Rust; поддерживаются `.html`, `.md`, `.markdown`).
+- Список статей и страницы отдельных статей, собираемые из Markdown-файлов
+  (темы по Python и Rust; `.md`/`.markdown`, рендер через `markdown`).
+- Управление реестром статей `/art_manage` (после входа): три секции — реестр, файлы без
+  записи, записи без файла; POST-формы добавления/обновления записей `articles.yaml`.
 - Регистрация / вход / выход пользователей на Flask-Login с хешированием паролей
   Flask-Bcrypt.
 - Страница аккаунта с загрузкой аватара, который Pillow уменьшает в миниатюру.
-- Переключение светлой и тёмной темы через `static/art_css/` + `scripts.js`.
+- Тёмная/светлая тема на Bootstrap 5.3.8 (`data-bs-theme` + CSS-переменные, один
+  `base.css`) и подсветка кода highlight.js 11.12.0 с выбором темы подсветки; всё
+  с cdn.jsdelivr.net с SRI. Русскоязычный интерфейс, тогглер мобильного меню.
 - Своя обёртка `ConfigLogger` над `logging.config.dictConfig`.
 - Обработчики ошибок 403 / 404 / 500 на уровне приложения.
 - Полноценное развёртывание в Docker: gunicorn за nginx с TLS, PostgreSQL 16 и pgAdmin.
@@ -78,6 +82,8 @@ Qwen Code в корне проекта. Главная сессия (glm-5.3) п
 | Аутентификация | Flask-Login + Flask-Bcrypt |
 | Формы | Flask-WTF / WTForms (+ `email-validator`) |
 | Валидация / схемы | Pydantic 2.12 |
+| Фронтенд | Bootstrap 5.3.8 + highlight.js 11.12.0 (jsdelivr, SRI), темы `data-bs-theme` |
+| Рендер статей | `markdown` (fenced_code, tables) + YAML-реестр (PyYAML) |
 | WSGI-сервер | `waitress` локально, `gunicorn` в Docker |
 | Обратный прокси | nginx с TLS (только в Docker) |
 | Изображения | Pillow |
@@ -142,7 +148,7 @@ adversary — в `tasks/current/ADVERSARIAL_REVIEW.md`, доказательст
 | Переменная | Кто использует | Обязательна | Примечания |
 |---|---|---|---|
 | `SECRET_KEY` | сессии Flask, CSRF | да | любая длинная случайная строка |
-| `DATABASE_URI` | SQLAlchemy | да | **единственный** источник DSN |
+| `DATABASE_URI` | SQLAlchemy | да (либо полный набор `DB_*`) | основной источник DSN; если не задана — DSN собирается из `DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`/`DB_NAME`; для быстрой проверки допускается `sqlite:///site.db` |
 | `LOG_DIR` | `ConfigLogger` | да | должен быть **одноуровневым**, например `./log` |
 | `LOG_FILE` | `ConfigLogger` | да | например `FLASK.log` |
 | `DB_USER`, `DB_PASSWORD`, `DB_NAME` | docker compose → postgres | только Docker | не входят в DSN |
@@ -150,13 +156,16 @@ adversary — в `tasks/current/ADVERSARIAL_REVIEW.md`, доказательст
 
 ## Маршруты
 
-Регистрируются 13 URL-правил (12 маршрутов приложения плюс встроенный `static`):
+Регистрируются 16 URL-правил (15 маршрутов приложения плюс встроенный `static`):
 
 | Методы | Маршрут | Эндпоинт | Назначение |
 |---|---|---|---|
 | GET | `/`, `/home` | `main.home` | перенаправляет на `/art_home` |
 | GET | `/art_home` | `art_main.art_home` | список статей — главная страница |
 | GET | `/art/<author>/<art_id>` | `art_main.art_author` | отдельная статья |
+| GET | `/art_manage` | `art_main.art_manage` | управление реестром статей (вход обязателен) |
+| POST | `/art_manage/add_all` | `art_main.art_manage_add_all` | добавить все новые файлы в реестр (вход обязателен) |
+| POST | `/art_manage/meta` | `art_main.art_manage_meta` | добавить/обновить запись (вход обязателен) |
 | GET | `/about` | `main.about` | страница «о проекте» |
 | GET | `/createDB`, `/createDB/`, `/createDB/<post_id>` | `main.createDB` | вызывает `db.create_all()` |
 | GET, POST | `/register` | `users.register` | регистрация |
@@ -185,9 +194,10 @@ Post(id, title, date_posted, content, user_id)
 ```
 
 Статьи — Pydantic-модели `ArticleLang` с полями `author`, `lang`, `art_id`, `title`,
-`file_name`, `content`. Метаданные — в `flaskblog/new_articles/articles.yaml`, тела — в
-`flaskblog/templates/content_art/`. Добавление статьи: файл `art.html`/`art.md` в
-`content_art/` + запись в `articles.yaml` с уникальным `art_id`.
+`file_name`, `content`. Метаданные — в `flaskblog/new_articles/articles.yaml`, тела —
+Markdown-файлы в `flaskblog/templates/content_art/`. Реестр перечитывается при изменении
+YAML (по mtime), перезапуск не нужен. Добавление статьи: файл `.md` в `content_art/` +
+запись в `articles.yaml` с уникальным `art_id` — либо кнопки на `/art_manage` после входа.
 
 ## Документация
 
@@ -202,6 +212,7 @@ Post(id, title, date_posted, content, user_id)
 | [`docs/03_execution_flow.md`](docs/03_execution_flow.md) | логика работы кода: жизненный цикл, маршруты, ключевые процессы, логирование |
 | [`docs/04_code_quality.md`](docs/04_code_quality.md) | оценка качества кодовой базы, дефекты по критичности |
 | [`docs/05_optimization_roadmap.md`](docs/05_optimization_roadmap.md) | предложения по развитию и рефакторингу |
+| [`docs/frontend/`](docs/frontend/) | фронтенд до/после миграции на Bootstrap 5 (задания 003/004): разбор, оценка современности, план улучшений |
 
 ## Индекс кодовой базы
 
@@ -215,7 +226,7 @@ Post(id, title, date_posted, content, user_id)
 
 ```bash
 uv run ruff check .
-python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # 13
+python -c "from flaskblog import create_app; print(len(list(create_app().url_map.iter_rules())))"   # 16
 python -m flaskblog.run                                                                            # затем curl /
 ```
 
